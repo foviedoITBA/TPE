@@ -1,5 +1,5 @@
-#ifndef 2048BACK_H
-#define 2048BACK_H
+#ifndef BACK_H
+#define BACK_H
 
 #include <stdlib.h>
 #include <time.h>
