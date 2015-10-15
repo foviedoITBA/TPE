@@ -3,21 +3,24 @@
 
 #include "2048Tipos.h"
 #include "2048Back.h"
+#include "getnum.h"
 
-#define MAX_OPCIONES '3'
+#define CANT_OPCIONES_MENU 3
+#define CANT_DIFICULTADES 3
 #define BORRA_BUFFER() while(getchar() != '\n')
-#define opcionValida(opcion) ((opcion) > '0' && (opcion) <= MAX_OPCIONES ? 1 : 0)
+#define opcionValida(opcion, cantidad) ((opcion) > 0 && (opcion) <= (cantidad) ? 1 : 0)
+#define imprimirData(DIF) printf("Tablero %dx%d\nFicha ganadora: %d\nUndos: %d\n\n", TAMANIO_ ## DIF ,TAMANIO_ ## DIF ,VICTORIA_ ## DIF ,UNDOS_ ## DIF)
 
 void limpiarPantalla();
-int menu(INFO *);
-void juegoNuevo(INFO*);
-void cargarJuego(INFO*);
-
+int leerOpcion(int);
+int menuPrincipal(INFO*);
+void menuDificultad(INFO*);
+void menuCargar(INFO*);
 
 int main(void)
 {
 	INFO infoActual, infoRespaldo;
-	int opcion = menu(&infoActual);
+	int opcion = menuPrincipal(&infoActual);
 	return 0;
 }
 
@@ -30,39 +33,65 @@ void limpiarPantalla()
 	#endif
 }
 
-int menu(INFO * laInfo)
+int leerOpcion(int cantidad)
 {
-	int leer = 0;
-	limpiarPantalla();
-	printf("*****¡Bienvenido al 2048!*****\n\n");
+	int opcion;	
 	do
 	{
-		printf("1: Juego Nuevo\n");
-		printf("2: Cargar Juego\n");
-		printf("3: Salir\n\n");
-		printf("Ingrese opción: ");	
-		
-		leer = getchar();
-		BORRA_BUFFER();
-		
-		switch(leer)
-		{
-			case '1':
-				juegoNuevo(laInfo);
-				break;
-			case '2':
-				cargarJuego(laInfo /*, laOtraInfo */);
-				break;
-			case '3':
-				break;
-			default:
-				printf("Opción inválida\n\n");
+		opcion = getint("Ingrese opción: ");
+		if (!opcionValida(opcion, cantidad))
+			printf("Opción inválida\n");
+	} while(!opcionValida(opcion, cantidad));
+	return opcion;
+}
 
-		}
+int menuPrincipal(INFO * laInfo)
+{
+	int opcion = 0;
+	limpiarPantalla();
+	printf("*****¡Bienvenido al 2048!*****\n\n");
+	
+	printf("1: Juego Nuevo\n");
+	printf("2: Cargar Juego\n");
+	printf("3: Salir\n\n");
+	
+	opcion = leerOpcion(CANT_OPCIONES_MENU);
+	
+	switch(opcion)
+	{
+		case 1:
+			menuDificultad(laInfo);
+			break;
+		case 2:
+			menuCargar(laInfo);
+			break;
+		case 3:
+			break;
+	}
 
-	} while(!opcionValida(leer));
+	return opcion;
+}
 
-	return leer;
+void menuDificultad(INFO * laInfo)
+{
+	int opcion;
+
+	limpiarPantalla();
+	printf("*****Juego Nuevo*****\n\n");
+	printf("1: Fácil\n");
+	imprimirData(FACIL);
+	printf("2: Medio\n");
+	imprimirData(MEDIO);
+	printf("3: Difícil\n");
+	imprimirData(DIFICIL);
+	
+	laInfo->dificultad = leerOpcion(CANT_DIFICULTADES);
+}
+
+void menuCargar(INFO * laInfo)
+{
+	printf("Ingrese el nombre del archivo: ");
+	/*laInfo->nombreArchivoCarga = leerNombreArchivo();*/
 }
 
 
