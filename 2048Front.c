@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
-#include "2048Tipos.h"
 #include "2048Back.h"
 #include "getnum.h"
 
@@ -13,14 +13,42 @@
 
 void limpiarPantalla();
 int leerOpcion(int);
-int menuPrincipal(INFO*);
-void menuDificultad(INFO*);
-void menuCargar(INFO*);
+int menuPrincipal(Info*);
+void menuDificultad(Info*);
+void menuCargar(Info*);
+char * leerNombreArchivo();
+
+void verQueOnda(Info * laInfo)
+{
+	int i, j;
+	unsigned short int tamanio;
+	tamanio = dameTamanio(laInfo->dificultad);
+	limpiarPantalla();
+	printf("\n");
+	for (i = 0; i < tamanio; i++)
+	{
+		for (j = 0; j < tamanio; j++)
+			printf("%hu", laInfo->tablero[i][j]);
+		printf("\n");
+	}
+	printf("\n\n");
+
+	printf("Undos: %hu\nPuntaje: %u\n", laInfo->undos, laInfo->puntaje);
+}
 
 int main(void)
 {
-	INFO infoActual, infoRespaldo;
+	Info infoActual, infoRespaldo;
 	int opcion = menuPrincipal(&infoActual);
+	if (opcion == SALIR)
+	{
+		printf("*****¡Adiós!*****");
+		return 0;
+	}
+	prepararJuego(&infoActual, &infoRespaldo, opcion);
+
+
+	verQueOnda(&infoActual);
 	return 0;
 }
 
@@ -45,7 +73,7 @@ int leerOpcion(int cantidad)
 	return opcion;
 }
 
-int menuPrincipal(INFO * laInfo)
+int menuPrincipal(Info * laInfo)
 {
 	int opcion = 0;
 	limpiarPantalla();
@@ -59,20 +87,20 @@ int menuPrincipal(INFO * laInfo)
 	
 	switch(opcion)
 	{
-		case 1:
+		case JUEGO_NUEVO:
 			menuDificultad(laInfo);
 			break;
-		case 2:
+		case CARGAR_JUEGO:
 			menuCargar(laInfo);
 			break;
-		case 3:
+		case SALIR:
 			break;
 	}
 
 	return opcion;
 }
 
-void menuDificultad(INFO * laInfo)
+void menuDificultad(Info * laInfo)
 {
 	int opcion;
 
@@ -88,10 +116,20 @@ void menuDificultad(INFO * laInfo)
 	laInfo->dificultad = leerOpcion(CANT_DIFICULTADES);
 }
 
-void menuCargar(INFO * laInfo)
+void menuCargar(Info * laInfo)
 {
 	printf("Ingrese el nombre del archivo: ");
-	/*laInfo->nombreArchivoCarga = leerNombreArchivo();*/
+	laInfo->nombreArchivoCarga = leerNombreArchivo();
 }
 
-
+char * leerNombreArchivo()
+{
+	char format[6];
+	char * nombreArchivo = malloc(MAX_FILE_NAME_SIZE * sizeof(nombreArchivo[0]));
+	if(nombreArchivo == NULL)
+		return NULL;
+	sprintf(format, "%%%ds", MAX_FILE_NAME_SIZE-1);
+	scanf(format, nombreArchivo);
+	nombreArchivo = realloc(nombreArchivo, strlen(nombreArchivo)*sizeof(nombreArchivo[0]));
+	return nombreArchivo;
+}
