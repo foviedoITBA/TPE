@@ -15,16 +15,16 @@ unsigned short int dameTamanio(Dificultad dif)
 	}
 }
 
-int prepararJuego(Info * laInfoActual, Info * laInfoRespaldo, int opcion)
+Cod_Error prepararJuego(Info * laInfoActual, Info * laInfoRespaldo, int opcion)
 {
 	int result;
 	if (opcion == JUEGO_NUEVO)
 	{
 		result = inicializarNuevo(laInfoActual);
-		if (result == ERROR)
-			return ERROR;
+		if (result == ERROR_MEMORIA)
+			return ERROR_MEMORIA;
 		result = inicializarNuevo(laInfoRespaldo);
-		if (result == ERROR)
+		if (result == ERROR_MEMORIA)
 			liberarTablero(laInfoActual);
 		return result;
 	}
@@ -34,7 +34,7 @@ int prepararJuego(Info * laInfoActual, Info * laInfoRespaldo, int opcion)
 	}
 }
 
-int inicializarNuevo(Info * laInfo)
+static Cod_Error inicializarNuevo(Info * laInfo)
 {
 	int i, j;
 	unsigned short int tamanio = dameTamanio(laInfo->dificultad);
@@ -55,13 +55,15 @@ int inicializarNuevo(Info * laInfo)
 
 	laInfo->tablero = crearTablero(tamanio);
 	if (laInfo->tablero == NULL)
-		return ERROR;
+		return ERROR_MEMORIA;
 	
 	for (i = 0; i < tamanio; i++)
 		for (j = 0; j < tamanio; j++)
 			laInfo->tablero[i][j] = 0;
 
-	return 0;
+	laInfo->nombreArchivoCarga = NULL;
+
+	return OK;
 }
 
 static Tablero crearTablero(unsigned short int tamanio)

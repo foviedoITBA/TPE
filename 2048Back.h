@@ -20,7 +20,7 @@
 
 #define MAX_FILE_NAME_SIZE 51
 
-#define ERROR -1
+typedef enum {OK = 0, ERROR_MEMORIA = -1, ERROR_ARCHIVO = -2} Cod_Error;
 
 enum {JUEGO_NUEVO = 1, CARGAR_JUEGO, SALIR};
 enum {DIF_FACIL = 1, DIF_MEDIO, DIF_DIFICIL};
@@ -40,8 +40,9 @@ typedef struct
 } Info;
 
 unsigned short int dameTamanio(Dificultad);
-int prepararJuego(Info*, Info*, int);
+Cod_Error prepararJuego(Info*, Info*, int);
+static Cod_Error inicializarNuevo(Info *);
 static Tablero crearTablero(unsigned short int);
-static liberarTablero(Info*);
+static void liberarTablero(Info*);
 
 #endif

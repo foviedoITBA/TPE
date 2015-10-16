@@ -17,6 +17,7 @@ int menuPrincipal(Info*);
 void menuDificultad(Info*);
 void menuCargar(Info*);
 char * leerNombreArchivo();
+Cod_Error jugar(Info * i1, Info * i2) {}
 
 void verQueOnda(Info * laInfo)
 {
@@ -39,17 +40,28 @@ void verQueOnda(Info * laInfo)
 int main(void)
 {
 	Info infoActual, infoRespaldo;
+	Cod_Error hubo_error;
 	int opcion = menuPrincipal(&infoActual);
 	if (opcion == SALIR)
 	{
 		printf("*****¡Adiós!*****");
 		return 0;
 	}
-	prepararJuego(&infoActual, &infoRespaldo, opcion);
+	hubo_error = prepararJuego(&infoActual, &infoRespaldo, opcion);
+	if (hubo_error == ERROR_MEMORIA)
+	{
+		printf("ERROR: FALTA MEMORIA\n");
+		return hubo_error;
+	}
+	else if (hubo_error == ERROR_ARCHIVO)
+	{
+		printf("ERROR: ARCHIVO INVÁLIDO\n");
+		return hubo_error;
+	}
 
+	hubo_error = jugar(&infoActual, &infoRespaldo);
 
-	verQueOnda(&infoActual);
-	return 0;
+	return hubo_error;
 }
 
 void limpiarPantalla()
