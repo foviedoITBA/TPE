@@ -95,6 +95,8 @@ int menuPrincipal(Info * laInfo)
 	printf("2: Cargar Juego\n");
 	printf("3: Salir\n\n");
 	
+	printf("4:GUARDAR")	//PARA GUARDAR BORRAR DSP
+	
 	opcion = leerOpcion(CANT_OPCIONES_MENU);
 	
 	switch(opcion)
@@ -107,6 +109,11 @@ int menuPrincipal(Info * laInfo)
 			break;
 		case SALIR:
 			break;
+		case 4:												//PARA GUARDAR BORRAR DSP
+			laInfo->tablero=randomizeTablero(laInfo);		//
+			menuCargar(laInfo);								//
+			guardaPartida(laInfo);							//
+			break;											//borrar dsp
 	}
 
 	return opcion;
@@ -144,4 +151,23 @@ char * leerNombreArchivo()
 	scanf(format, nombreArchivo);
 	nombreArchivo = realloc(nombreArchivo, strlen(nombreArchivo)*sizeof(nombreArchivo[0]));
 	return nombreArchivo;
+}
+
+//PARA GUARDAR BORRAR DSP
+//de aca para abajo
+
+
+FILE * guardaPartida(Info * laInfo)
+{
+	int i,j;
+	int tam = dameTamanio(laInfo->dificultad);
+	FILE *archivoGuarda = fopen(laInfo->nombreArchivoCarga, "wb");
+	
+	fwrite(&laInfo->dificultad, sizeof(Dificultad),1,archivoGuarda);
+	fwrite(&laInfo->puntaje, sizeof(Puntaje),1,archivoGuarda);
+	
+	for(i = 0; i < tam ; i++)
+		fwrite(laInfo->tablero[i] ,sizeof(laInfo->Tablero[0][0]), tam, archivoGuarda);
+
+
 }

@@ -99,3 +99,19 @@ static void liberarTablero(Info * laInfo)
 	free(laInfo->tablero);
 	laInfo->tablero = NULL;
 }
+
+
+//PARA GUARDAR BORRAR DSP
+
+Tablero randomizeTablero(Info * laInfo)
+{
+	int i, j;
+	Tablero tableroRandom;
+	int tam = dameTamanio(laInfo->dificultad);
+
+	for(i = 0; i < tam ; i++)
+		for(j = 0; j < tam ; j++)
+			tableroRandom[i][j]=rand()%10;
+
+	return tableroRandom;
+}
