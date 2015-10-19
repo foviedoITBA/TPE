@@ -45,8 +45,4 @@ static Cod_Error inicializarNuevo(Info *);
 static Tablero crearTablero(unsigned short int);
 static void liberarTablero(Info*);
 
-//PARA GUARDAR BORRAR DSP
-
-Tablero randomizeTablero(Info * laInfo)
-
 #endif
