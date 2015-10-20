@@ -17,18 +17,20 @@ int menuPrincipal(Info*);
 void menuDificultad(Info*);
 void menuCargar(Info*);
 char * leerNombreArchivo();
-Cod_Error jugar(Info * i1, Info * i2) {}
+Cod_Error jugar(Info*, Info*);
+unsigned short int validarJugadas(Info*);
+char leerJugada(const char *, unsigned short int);
+void imprimirTablero(const Info *);
 
 void verQueOnda(Info * laInfo)
 {
 	int i, j;
 	unsigned short int tamanio;
-	tamanio = dameTamanio(laInfo->dificultad);
 	limpiarPantalla();
 	printf("\n");
-	for (i = 0; i < tamanio; i++)
+	for (i = 0; i < laInfo->tamanio; i++)
 	{
-		for (j = 0; j < tamanio; j++)
+		for (j = 0; j < laInfo->tamanio; j++)
 			printf("%hu", laInfo->tablero[i][j]);
 		printf("\n");
 	}
@@ -44,9 +46,10 @@ int main(void)
 	int opcion = menuPrincipal(&infoActual);
 	if (opcion == SALIR)
 	{
-		printf("*****¡Adiós!*****");
+		printf("*****¡Adiós!*****\n");
 		return 0;
 	}
+	srand(time(0));
 	hubo_error = prepararJuego(&infoActual, &infoRespaldo, opcion);
 	if (hubo_error == ERROR_MEMORIA)
 	{
@@ -126,7 +129,7 @@ void menuDificultad(Info * laInfo)
 	printf("3: Difícil\n");
 	imprimirData(DIFICIL);
 	
-	laInfo->dificultad = leerOpcion(CANT_DIFICULTADES);
+	laInfo->tamanio = dameTamanio(leerOpcion(CANT_DIFICULTADES));
 }
 
 void menuCargar(Info * laInfo)
@@ -145,4 +148,66 @@ char * leerNombreArchivo()
 	scanf(format, nombreArchivo);
 	nombreArchivo = realloc(nombreArchivo, strlen(nombreArchivo)*sizeof(nombreArchivo[0]));
 	return nombreArchivo;
+}
+
+Cod_Error jugar(Info * laInfoActual, Info * laInfoRespaldo)
+{
+	unsigned short int cantJugadas;
+	char jugada;
+	do
+	{
+		limpiarPantalla();
+		imprimirTablero(&laInfoActual);
+		cantJugadas = validarJugadas(&laInfoActual);
+		if (cantJugadas == 0)
+		{
+			printf("*****PERDISTE*****\n");
+			return 0;
+		}
+		imprimirOpciones();
+		jugada = leerJugada(laInfoActual->jugadasValidas, cantJugadas);
+		switch(jugada)
+		{
+			case SALIR:
+				/* Algo para guardar y salir */
+				break;
+			case GUARDAR:
+				/* Algo para guardar */
+				break;
+			default:
+				actualizarInfo(&laInfoActual, &laInfoRespaldo, jugada);
+		}
+
+	} while(/*algo*/);
+}
+
+char leerJugada(const char * jugadasValidas, unsigned short int cantJugadas)
+{
+	int c;
+	BOOL valida = FALSE;
+	do
+	{
+		unsigned short int i;
+		c = getchar();
+		BORRA_BUFFER;
+		if (c == SALIR || c == GUARDAR)
+			valida = TRUE;
+		for (i = 0; i < cantJugadas && !valida; i++)
+			if (c == jugadasValidas[i])
+				valida = TRUE;
+	} while (valida == FALSE)
+	return (char) c;
+}
+
+void imprimirTablero(const Info * laInfo)
+{
+	// Cata, acá va tu imprimir tablero
+	// Fijate que cambiamos la estructura de info
+	// y ahora tiene directamente el tamaño en lugar
+	// de la dificultad. Sigue estando dameTamanio
+	// y hay una nueva, dameDificultad.
+	// El proyecto no compila porque hay un montón
+	// de funciones sin definir, no trates de compilarlo,
+	// sólo poné acá lo que hiciste que ya "sabés que anda".
+	// return springRolls.
 }

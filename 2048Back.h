@@ -20,29 +20,40 @@
 
 #define MAX_FILE_NAME_SIZE 51
 
+#define ARRIBA 'w'
+#define ABAJO 's'
+#define IZQUIERDA 'a'
+#define DERECHA 'd'
+#define SALIR 'q'
+#define GUARDAR 'g'
+#define UNDO 'u'
+
+#define MAX_JUGADAS 5 // 4 direcciones y undo
+
 typedef enum {OK = 0, ERROR_MEMORIA = -1, ERROR_ARCHIVO = -2} Cod_Error;
+typedef enum {FALSE = 0, TRUE} BOOL;
 
 enum {JUEGO_NUEVO = 1, CARGAR_JUEGO, SALIR};
 enum {DIF_FACIL = 1, DIF_MEDIO, DIF_DIFICIL};
 
 typedef unsigned short int Ficha;
 typedef Ficha** Tablero;
-typedef unsigned short int Dificultad;
 typedef unsigned int Puntaje;
+typedef unsigned short int Tamanio;
 
 typedef struct
 {
-	Dificultad dificultad;
+	Tamanio tamanio;
 	Puntaje puntaje;
-	char undos;
+	unsigned short int undos;
+	BOOL undoPosible;
 	Tablero tablero;
+	char jugadasValidas[MAX_JUGADAS];
 	char * nombreArchivoCarga;
 } Info;
 
-unsigned short int dameTamanio(Dificultad);
+unsigned short int dameTamanio(unsigned int);
 Cod_Error prepararJuego(Info*, Info*, int);
-static Cod_Error inicializarNuevo(Info *);
-static Tablero crearTablero(unsigned short int);
-static void liberarTablero(Info*);
+void actualizarInfo(Info*,Info*, char);
 
 #endif
