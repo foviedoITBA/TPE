@@ -6,6 +6,11 @@ static void liberarTablero(Info*);
 static void fichaAlAzar(Ficha*, unsigned short int*, unsigned short int*, Tamanio);
 static void copiarInfo(Info*, Info*);
 static void mover(Info*, char);
+static Cod_Error ponerFicha(Info *, char);
+static int recorrerTablero(const Info *, char, posicionLibre *);
+static int recorrerTableroIzquierdaoDerecha(const Info *, char, posicionLibre *);
+static int recorrerTableroArribaoAbajo(const Info *, char, posicionLibre *);
+
 
 static void fichaAlAzar(Ficha * laFicha, unsigned short int * x, unsigned short int * y, Tamanio tam)
 {
@@ -168,4 +173,111 @@ static void copiarInfo(Info * infoDestino, const Info * infoFuente)
 	for (i = 0; i < infoFuente->tamanio; i++)
 		for (j = 0; j < infoFuente->tamanio; j++)
 			infoDestino->tablero[i][j] = infoFuente->tablero[i][j];
+}
+
+static Cod_Error ponerFicha(Info * laInfo, char ultimaDireccion)
+{
+	int auxRand;
+	unsigned short int cantLibre;
+	posicionLibre * posiciones;
+	posiciones = malloc((laInfo->tamanio * laInfo->tamanio)*sizeof(posicionLibre));
+
+	if(posiciones == NULL)
+		return ERROR_MEMORIA;
+
+	cantLibre=recorrerTablero(laInfo, ultimaDireccion, posiciones);
+
+	auxRand = rand()%cantLibre;
+	
+	laInfo->tablero[posiciones[auxRand].x][posiciones[auxRand].y] = FICHA_NUEVA();
+}
+
+
+static int recorrerTablero(const Info * laInfo, char direccion, posicionLibre * posiciones)		/* Se requieren dos funciones: 			*/
+{																								/* recorrerTableroIzquierdaoDerecha y	*/
+	if (direccion == ARRIBA || direccion == ABAJO)												/* recorrerTableroArribaoAbajo,	pues	*/
+		return recorrerTableroArribaoAbajo(laInfo, direccion, posiciones);						/* de esta manera se puede optimizar	*/
+	if (direccion == IZQUIERDA || direccion == DERECHA)											/* la busqueda de posiciones vacias,	*/
+		return recorrerTableroIzquierdaoDerecha(laInfo, direccion, posiciones);					/* cambiando el sentido de recorrido:	*/				
+}																								/* En un caso por filas y luego columnas*/
+																								/* Y en el otro, al revez. */
+
+
+static int recorrerTableroIzquierdaoDerecha(const Info * laInfo, char direccion, posicionLibre * posiciones)
+{
+	int i,j, cant = 0;
+	int libre;
+	unsigned short int posicionInicialFil, posicionInicialCol;
+	unsigned short int incrementoFil, incrementoCol;
+
+	switch(direccion)
+	{
+		case IZQUIERDA:
+			posicionInicialFil = 0;
+			posicionInicialCol = laInfo->tamanio - 1;
+			incrementoFil = +1;
+			incrementoCol = -1;
+			break;
+		case DERECHA:
+			posicionInicialFil = 0;
+			posicionInicialCol = 0;
+			incrementoFil = +1;
+			incrementoCol = +1;
+			break;
+	}
+
+	for( i = posicionInicialFil; i <= laInfo->tamanio - 1 ; i += incrementoFil)
+	{
+		libre = 1;
+		for(j = posicionInicialCol; 0<= j && j <= laInfo->tamanio - 1 && libre ; j += incrementoCol)
+		{
+			if(laInfo->tablero[i][j] != 0)
+				libre = 0;
+			posiciones[cant].x = i;
+			posiciones[cant].y = j;
+			cant++;
+		}
+	}
+
+	return cant;
+}
+
+
+static int recorrerTableroArribaoAbajo(const Info * laInfo, char direccion, posicionLibre * posiciones)
+{
+	int i,j, cant = 0;
+	int libre;
+	unsigned short int posicionInicialFil, posicionInicialCol;
+	unsigned short int incrementoFil, incrementoCol;
+
+	switch(direccion)
+	{
+		case ARRIBA:
+			posicionInicialFil = laInfo->tamanio - 1;
+			posicionInicialCol = 0;
+			incrementoFil = -1;
+			incrementoCol = +1;
+			break;
+		case ABAJO:
+			posicionInicialFil = 0;
+			posicionInicialCol = 0;
+			incrementoFil = +1;
+			incrementoCol = +1;
+			break;
+	}
+	for(j = posicionInicialCol; j <= laInfo->tamanio - 1 && libre ; j += incrementoCol)
+	{
+		libre = 1;
+		for( i = posicionInicialFil; 0 <= i && i <= laInfo->tamanio - 1 ; i += incrementoFil)
+		{
+			if(laInfo->tablero[i][j] != 0)
+				libre = 0;
+
+			posiciones[cant].x = i;
+			posiciones[cant].y = j;
+			cant++;
+		}
+	}
+	
+	return cant;
 }

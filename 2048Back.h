@@ -41,6 +41,12 @@ typedef Ficha** Tablero;
 typedef unsigned int Puntaje;
 typedef unsigned short int Tamanio;
 
+typedef struct 
+{
+	unsigned short int x;
+	unsigned short int y;
+} posicionLibre;
+
 typedef struct
 {
 	Tamanio tamanio;
@@ -55,5 +61,6 @@ typedef struct
 unsigned short int dameTamanio(unsigned int);
 Cod_Error prepararJuego(Info*, Info*, int);
 void actualizarInfo(Info*,Info*, char);
+
 
 #endif
