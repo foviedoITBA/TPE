@@ -67,14 +67,14 @@ Cod_Error prepararJuego(Info * laInfoActual, Info * laInfoRespaldo, int opcion)
 		}
 		
 		// Ponemos la primera ficha 
-		fichaAlAzar(&ficha, &x1, &y1, laInfo->tamanio);
-		laInfoActual->tablero[x1][y1] = ficha;
+		fichaAlAzar(&laFicha, &x1, &y1, laInfo->tamanio);
+		laInfoActual->tablero[x1][y1] = laFicha;
 		
 		// Ponemos la segunda ficha
 		do
 			fichaAlAzar(&laFicha, &x2, &y2);
 		while(x2 == x1 && y2 == y1);
-		laInfoActual->tablero[x2][y2] = ficha;
+		laInfoActual->tablero[x2][y2] = laFicha;
 
 		return result;
 	}
