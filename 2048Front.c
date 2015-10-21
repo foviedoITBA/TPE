@@ -201,13 +201,20 @@ char leerJugada(const char * jugadasValidas, unsigned short int cantJugadas)
 
 void imprimirTablero(const Info * laInfo)
 {
-	// Cata, acá va tu imprimir tablero
-	// Fijate que cambiamos la estructura de info
-	// y ahora tiene directamente el tamaño en lugar
-	// de la dificultad. Sigue estando dameTamanio
-	// y hay una nueva, dameDificultad.
-	// El proyecto no compila porque hay un montón
-	// de funciones sin definir, no trates de compilarlo,
-	// sólo poné acá lo que hiciste que ya "sabés que anda".
-	// return springRolls.
+	int i, j, h, recuadro;
+	unsigned short int tamanio;
+	tamanio = laInfo->tamanio;
+	recuadro = (4*tamanio)+tamanio+1; 				//(pongo el tamanio+1 porque son los * que separan a los numeros en cada fila)
+	for (h=0; h<recuadro; h++) 						//se que queda muy villero poner las lineas horizontales que separan las filas asi pero googlie y no hay otra forma
+		printf("*");								//para hacerlo, solo se puede hacer con loops porque no hay otra forma de hacer un "imprimime x numero de veces un
+	printf("\n");									//caracter"
+	for(i=0; i < tamanio; i++)						
+		{
+			for (j=0; j < tamanio; j++)
+					printf("*%4d", laInfo->tablero[i][j]);
+			printf("*\n");
+			for (h=0; h<recuadro; h++)
+				printf("*");
+			printf("\n");
+		}
 }
