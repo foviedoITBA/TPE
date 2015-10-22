@@ -4,13 +4,13 @@ static Cod_Error inicializarNuevo(Info *);
 static Tablero crearTablero(unsigned short int);
 static void liberarTablero(Info*);
 static void fichaAlAzar(Ficha*, unsigned short int*, unsigned short int*, Tamanio);
-static void copiarInfo(Info*, Info*);
+static void copiarInfo(Info*, const Info*);
 static void mover(Info*, char);
 static Cod_Error ponerFicha(Info *, char);
 static int recorrerTablero(const Info *, char, posicionLibre *);
 static int recorrerTableroIzquierdaoDerecha(const Info *, char, posicionLibre *);
 static int recorrerTableroArribaoAbajo(const Info *, char, posicionLibre *);
-
+static void mover(Info*,char);
 
 static void fichaAlAzar(Ficha * laFicha, unsigned short int * x, unsigned short int * y, Tamanio tam)
 {
@@ -66,13 +66,13 @@ Cod_Error prepararJuego(Info * laInfoActual, Info * laInfoRespaldo, int opcion)
 			return ERROR_MEMORIA;
 		}
 		
-		// Ponemos la primera ficha 
-		fichaAlAzar(&laFicha, &x1, &y1, laInfo->tamanio);
+		/* Ponemos la primera ficha */
+		fichaAlAzar(&laFicha, &x1, &y1, laInfoActual->tamanio);
 		laInfoActual->tablero[x1][y1] = laFicha;
 		
-		// Ponemos la segunda ficha
+		/* Ponemos la segunda ficha */
 		do
-			fichaAlAzar(&laFicha, &x2, &y2);
+			fichaAlAzar(&laFicha, &x2, &y2, laInfoActual->tamanio);
 		while(x2 == x1 && y2 == y1);
 		laInfoActual->tablero[x2][y2] = laFicha;
 
@@ -87,7 +87,7 @@ Cod_Error prepararJuego(Info * laInfoActual, Info * laInfoRespaldo, int opcion)
 static Cod_Error inicializarNuevo(Info * laInfo)
 {
 	int i, j;
-	unsigned short int dificultad = dameDificultad(laInfo);
+	unsigned short int dificultad = dameDificultad(laInfo->tamanio);
 
 	laInfo->puntaje = 0;
 	switch(dificultad)
@@ -103,12 +103,12 @@ static Cod_Error inicializarNuevo(Info * laInfo)
 			break;
 	}
 
-	laInfo->tablero = crearTablero(tamanio);
+	laInfo->tablero = crearTablero(laInfo->tamanio);
 	if (laInfo->tablero == NULL)
 		return ERROR_MEMORIA;
 	
-	for (i = 0; i < tamanio; i++)
-		for (j = 0; j < tamanio; j++)
+	for (i = 0; i < laInfo->tamanio; i++)
+		for (j = 0; j < laInfo->tamanio; j++)
 			laInfo->tablero[i][j] = 0;
 
 	laInfo->undoPosible = FALSE;
@@ -154,14 +154,14 @@ void actualizarInfo(Info * laInfoActual, Info * laInfoRespaldo, char jugada)
 {
 	if (jugada == UNDO)
 	{
-		copiarInfo(&laInfoActual, &laInfoRespaldo);
+		copiarInfo(laInfoActual, laInfoRespaldo);
 		laInfoActual->undos -= 1;
 		laInfoActual->undoPosible = FALSE;
 	}
 	else
 	{
-		copiarInfo(&laInfoRespaldo, &laInfoActual);
-		mover(&laInfoActual, jugada);
+		copiarInfo(laInfoRespaldo, laInfoActual);
+		mover(laInfoActual, jugada);
 		laInfoActual->undoPosible = TRUE;
 	}
 }
@@ -173,6 +173,11 @@ static void copiarInfo(Info * infoDestino, const Info * infoFuente)
 	for (i = 0; i < infoFuente->tamanio; i++)
 		for (j = 0; j < infoFuente->tamanio; j++)
 			infoDestino->tablero[i][j] = infoFuente->tablero[i][j];
+}
+
+static void mover(Info * laInfo, char direccion)
+{	/* Falta hacerla */
+	return;
 }
 
 static Cod_Error ponerFicha(Info * laInfo, char ultimaDireccion)
@@ -192,6 +197,12 @@ static Cod_Error ponerFicha(Info * laInfo, char ultimaDireccion)
 	laInfo->tablero[posiciones[auxRand].x][posiciones[auxRand].y] = FICHA_NUEVA();
 }
 
+unsigned short int validarJugadas(Info * laInfo)
+{	/* Falta hacerla */
+	laInfo->jugadasValidas[0] = 'w';
+	laInfo->jugadasValidas[1] = 'u';
+	return 2;
+}
 
 static int recorrerTablero(const Info * laInfo, char direccion, posicionLibre * posiciones)		/* Se requieren dos funciones: 			*/
 {																								/* recorrerTableroIzquierdaoDerecha y	*/

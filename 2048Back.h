@@ -24,11 +24,11 @@
 #define ABAJO 's'
 #define IZQUIERDA 'a'
 #define DERECHA 'd'
-#define SALIR 'q'
+#define QUIT 'q'
 #define GUARDAR 'g'
 #define UNDO 'u'
 
-#define MAX_JUGADAS 5 // 4 direcciones y undo
+#define MAX_JUGADAS 5 /*4 direcciones y undo*/
 
 typedef enum {OK = 0, ERROR_MEMORIA = -1, ERROR_ARCHIVO = -2} Cod_Error;
 typedef enum {FALSE = 0, TRUE} BOOL;
@@ -61,6 +61,7 @@ typedef struct
 unsigned short int dameTamanio(unsigned int);
 Cod_Error prepararJuego(Info*, Info*, int);
 void actualizarInfo(Info*,Info*, char);
+unsigned short int validarJugadas(Info*);
 
 
 #endif

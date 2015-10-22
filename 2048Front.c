@@ -21,6 +21,7 @@ Cod_Error jugar(Info*, Info*);
 unsigned short int validarJugadas(Info*);
 char leerJugada(const char *, unsigned short int);
 void imprimirTablero(const Info *);
+void imprimirOpciones();
 
 void verQueOnda(Info * laInfo)
 {
@@ -157,8 +158,8 @@ Cod_Error jugar(Info * laInfoActual, Info * laInfoRespaldo)
 	do
 	{
 		limpiarPantalla();
-		imprimirTablero(&laInfoActual);
-		cantJugadas = validarJugadas(&laInfoActual);
+		imprimirTablero(laInfoActual);
+		cantJugadas = validarJugadas(laInfoActual);
 		if (cantJugadas == 0)
 		{
 			printf("*****PERDISTE*****\n");
@@ -168,17 +169,17 @@ Cod_Error jugar(Info * laInfoActual, Info * laInfoRespaldo)
 		jugada = leerJugada(laInfoActual->jugadasValidas, cantJugadas);
 		switch(jugada)
 		{
-			case SALIR:
+			case QUIT:
 				/* Algo para guardar y salir */
 				break;
 			case GUARDAR:
 				/* Algo para guardar */
 				break;
 			default:
-				actualizarInfo(&laInfoActual, &laInfoRespaldo, jugada);
+				actualizarInfo(laInfoActual, laInfoRespaldo, jugada);
 		}
 
-	} while(/*algo*/);
+	} while(jugada != QUIT);
 }
 
 char leerJugada(const char * jugadasValidas, unsigned short int cantJugadas)
@@ -189,13 +190,15 @@ char leerJugada(const char * jugadasValidas, unsigned short int cantJugadas)
 	{
 		unsigned short int i;
 		c = getchar();
-		BORRA_BUFFER;
-		if (c == SALIR || c == GUARDAR)
+		BORRA_BUFFER();
+		if (c == QUIT || c == GUARDAR)
 			valida = TRUE;
 		for (i = 0; i < cantJugadas && !valida; i++)
 			if (c == jugadasValidas[i])
 				valida = TRUE;
-	} while (valida == FALSE)
+		if (valida == FALSE)
+			printf("JUGADA INVÁLIDA\n");
+	} while (valida == FALSE);
 	return (char) c;
 }
 
@@ -204,10 +207,10 @@ void imprimirTablero(const Info * laInfo)
 	int i, j, h, recuadro;
 	unsigned short int tamanio;
 	tamanio = laInfo->tamanio;
-	recuadro = (4*tamanio)+tamanio+1; 				//(pongo el tamanio+1 porque son los * que separan a los numeros en cada fila)
-	for (h=0; h<recuadro; h++) 						//se que queda muy villero poner las lineas horizontales que separan las filas asi pero googlie y no hay otra forma
-		printf("*");								//para hacerlo, solo se puede hacer con loops porque no hay otra forma de hacer un "imprimime x numero de veces un
-	printf("\n");									//caracter"
+	recuadro = (4*tamanio)+tamanio+1; 				/*(pongo el tamanio+1 porque son los * que separan a los numeros en cada fila)*/
+	for (h=0; h<recuadro; h++) 						/*se que queda muy villero poner las lineas horizontales que separan las filas asi pero googlie y no hay otra forma*/
+		printf("*");								/*para hacerlo, solo se puede hacer con loops porque no hay otra forma de hacer un "imprimime x numero de veces un*/
+	printf("\n");									/*caracter"*/
 	for(i=0; i < tamanio; i++)						
 		{
 			for (j=0; j < tamanio; j++)
@@ -217,4 +220,9 @@ void imprimirTablero(const Info * laInfo)
 				printf("*");
 			printf("\n");
 		}
+}
+
+void imprimirOpciones()
+{
+	printf("Arriba: %c\tAbajo: %c\tIzquierda: %c\tDerecha: %c\tUndo: %c\tGuardar: %c\tSalir: %c\t\n", ARRIBA, ABAJO, IZQUIERDA, DERECHA, UNDO, GUARDAR, QUIT);
 }
