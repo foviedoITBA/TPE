@@ -20,7 +20,7 @@ char * leerNombreArchivo();
 Cod_Error jugar(Info*, Info*);
 unsigned short int validarJugadas(Info*);
 char leerJugada(const char *, unsigned short int);
-void imprimirTablero(const Info *);
+//void imprimirTablero(const Info *);
 void imprimirOpciones();
 
 void verQueOnda(Info * laInfo)
@@ -136,7 +136,7 @@ void menuDificultad(Info * laInfo)
 void menuCargar(Info * laInfo)
 {
 	printf("Ingrese el nombre del archivo: ");
-	laInfo->nombreArchivoCarga = leerNombreArchivo();
+	//laInfo->nombreArchivoCarga = leerNombreArchivo();
 }
 
 char * leerNombreArchivo()
@@ -207,20 +207,21 @@ void imprimirTablero(const Info * laInfo)
 	int i, j, h, recuadro;
 	unsigned short int tamanio;
 	tamanio = laInfo->tamanio;
-	recuadro = (4*tamanio)+tamanio+1; 				/*(pongo el tamanio+1 porque son los * que separan a los numeros en cada fila)*/
-	for (h=0; h<recuadro; h++) 						/*se que queda muy villero poner las lineas horizontales que separan las filas asi pero googlie y no hay otra forma*/
-		printf("*");								/*para hacerlo, solo se puede hacer con loops porque no hay otra forma de hacer un "imprimime x numero de veces un*/
-	printf("\n");									/*caracter"*/
-	for(i=0; i < tamanio; i++)						
+	recuadro = (4 * tamanio) + tamanio + 1; 				/*(pongo el tamanio+1 porque son los * que separan a los numeros en cada fila) */
+
+	for (h = 0; h < recuadro; h++) 							/*se que queda muy villero poner las lineas horizontales que separan las filas asi pero googlie y no hay otra forma	*/
+		printf("*");										/*para hacerlo, solo se puede hacer con loops porque no hay otra forma de hacer un "imprimime x numero de veces un	*/
+	printf("\n");											/*caracter"																											*/
+	for(i=0; i < tamanio; i++)										/*El for que hace printf * podria ser una macro, right?*/
 		{
-			for (j=0; j < tamanio; j++)
+			for (j = 0; j < tamanio; j++)
 					printf("*%4d", laInfo->tablero[i][j]);
 			printf("*\n");
-			for (h=0; h<recuadro; h++)
+			for (h = 0; h < recuadro; h++)
 				printf("*");
 			printf("\n");
 		}
-}
+} 
 
 void imprimirOpciones()
 {
