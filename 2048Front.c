@@ -12,16 +12,17 @@
 #define imprimirData(DIF) printf("Tablero %dx%d\nFicha ganadora: %d\nUndos: %d\n\n", TAMANIO_ ## DIF ,TAMANIO_ ## DIF ,VICTORIA_ ## DIF ,UNDOS_ ## DIF)
 
 void limpiarPantalla();
-int leerOpcion(int);
 int menuPrincipal(Info*);
+int leerOpcion(int);
 void menuDificultad(Info*);
 void menuCargar(Info*);
 char * leerNombreArchivo();
 Cod_Error jugar(Info*, Info*);
 unsigned short int validarJugadas(Info*);
 char leerJugada(const char *, unsigned short int);
-//void imprimirTablero(const Info *);
+void imprimirTablero(const Info *);
 void imprimirOpciones();
+void imprimirPuntajeyUndos(Info *);
 
 void verQueOnda(Info * laInfo)
 {
@@ -45,13 +46,21 @@ int main(void)
 	Info infoActual, infoRespaldo;
 	Cod_Error hubo_error;
 	int opcion = menuPrincipal(&infoActual);
-	if (opcion == SALIR)
+	randomizeSeed();
+
+	switch(opcion)
 	{
-		printf("*****¡Adiós!*****\n");
-		return 0;
+		case SALIR:
+				printf("*****¡Adiós!*****\n");
+				return 0;
+		case JUEGO_NUEVO:
+				hubo_error = prepararJuegoNuevo(&infoActual, &infoRespaldo);
+				break;
+		case CARGAR_JUEGO:
+				hubo_error = cargarJuego(&infoActual, &infoRespaldo);
+				break;
 	}
-	srand(time(0));
-	hubo_error = prepararJuego(&infoActual, &infoRespaldo, opcion);
+	
 	if (hubo_error == ERROR_MEMORIA)
 	{
 		printf("ERROR: FALTA MEMORIA\n");
@@ -77,17 +86,6 @@ void limpiarPantalla()
 	#endif
 }
 
-int leerOpcion(int cantidad)
-{
-	int opcion;	
-	do
-	{
-		opcion = getint("Ingrese opción: ");
-		if (!opcionValida(opcion, cantidad))
-			printf("Opción inválida\n");
-	} while(!opcionValida(opcion, cantidad));
-	return opcion;
-}
 
 int menuPrincipal(Info * laInfo)
 {
@@ -117,6 +115,18 @@ int menuPrincipal(Info * laInfo)
 	return opcion;
 }
 
+int leerOpcion(int cantidad)
+{
+	int opcion;	
+	do
+	{
+		opcion = getint("Ingrese opción: ");
+		if (!opcionValida(opcion, cantidad))
+			printf("Opción inválida\n");
+	} while(!opcionValida(opcion, cantidad));
+	return opcion;
+}
+
 void menuDificultad(Info * laInfo)
 {
 	int opcion;
@@ -136,18 +146,23 @@ void menuDificultad(Info * laInfo)
 void menuCargar(Info * laInfo)
 {
 	printf("Ingrese el nombre del archivo: ");
-	//laInfo->nombreArchivoCarga = leerNombreArchivo();
+	laInfo->nombreArchivoCarga = leerNombreArchivo();
 }
 
 char * leerNombreArchivo()
 {
 	char format[6];
+	
 	char * nombreArchivo = malloc(MAX_FILE_NAME_SIZE * sizeof(nombreArchivo[0]));
+
 	if(nombreArchivo == NULL)
 		return NULL;
+
 	sprintf(format, "%%%ds", MAX_FILE_NAME_SIZE-1);
 	scanf(format, nombreArchivo);
+
 	nombreArchivo = realloc(nombreArchivo, strlen(nombreArchivo)*sizeof(nombreArchivo[0]));
+	
 	return nombreArchivo;
 }
 
@@ -158,6 +173,7 @@ Cod_Error jugar(Info * laInfoActual, Info * laInfoRespaldo)
 	do
 	{
 		limpiarPantalla();
+		imprimirPuntajeyUndos(laInfoActual);
 		imprimirTablero(laInfoActual);
 		cantJugadas = validarJugadas(laInfoActual);
 		if (cantJugadas == 0)
@@ -207,11 +223,11 @@ void imprimirTablero(const Info * laInfo)
 	int i, j, h, recuadro;
 	unsigned short int tamanio;
 	tamanio = laInfo->tamanio;
-	recuadro = (4 * tamanio) + tamanio + 1; 				/*(pongo el tamanio+1 porque son los * que separan a los numeros en cada fila) */
+	recuadro = (4 * tamanio) + tamanio + 1; 						/*(pongo el tamanio+1 porque son los * que separan a los numeros en cada fila) */
 
-	for (h = 0; h < recuadro; h++) 							/*se que queda muy villero poner las lineas horizontales que separan las filas asi pero googlie y no hay otra forma	*/
-		printf("*");										/*para hacerlo, solo se puede hacer con loops porque no hay otra forma de hacer un "imprimime x numero de veces un	*/
-	printf("\n");											/*caracter"																											*/
+	for (h = 0; h < recuadro; h++) 									/*se que queda muy villero poner las lineas horizontales que separan las filas asi pero googlie y no hay otra forma	*/
+		printf("*");												/*para hacerlo, solo se puede hacer con loops porque no hay otra forma de hacer un "imprimime x numero de veces un	*/
+	printf("\n");													/*caracter"																											*/
 	for(i=0; i < tamanio; i++)										/*El for que hace printf * podria ser una macro, right?*/
 		{
 			for (j = 0; j < tamanio; j++)
@@ -225,5 +241,18 @@ void imprimirTablero(const Info * laInfo)
 
 void imprimirOpciones()
 {
-	printf("Arriba: %c\tAbajo: %c\tIzquierda: %c\tDerecha: %c\tUndo: %c\tGuardar: %c\tSalir: %c\t\n", ARRIBA, ABAJO, IZQUIERDA, DERECHA, UNDO, GUARDAR, QUIT);
+	printf("Arriba:\t\t%c\n",  ARRIBA, UNDO, GUARDAR, QUIT);
+	printf("Abajo:\t\t%c\n",   ABAJO);
+	printf("Izquierda:\t%c\n", IZQUIERDA );
+	printf("Derecha:\t%c\n", DERECHA );
+	printf("Undo:\t\t%c\n", UNDO);
+	printf("Guardar:\t%c\n", GUARDAR);
+	printf("Quit:\t\t%c\n",QUIT);
+}
+
+void imprimirPuntajeyUndos(Info * laInfoActual)
+{
+	printf("Puntaje:\t%d.\n",laInfoActual->puntaje);
+	printf("Undo posible:\t%s.\n", laInfoActual->undoPosible? "Si" : "No");
+	printf("Undos:\t\t%d.\n", laInfoActual->undos);
 }

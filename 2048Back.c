@@ -1,4 +1,5 @@
 #include "2048Back.h"
+#include <stdio.h> 			/* BORRAR DESPUES */
 
 static Cod_Error inicializarNuevo(Info *);
 static Tablero crearTablero(unsigned short int);
@@ -11,6 +12,7 @@ static int recorrerTablero(const Info *, char, posicionLibre *);
 static int recorrerTableroIzquierdaoDerecha(const Info *, char, posicionLibre *);
 static int recorrerTableroArribaoAbajo(const Info *, char, posicionLibre *);
 static void mover(Info*,char);
+
 
 static void fichaAlAzar(Ficha * laFicha, unsigned short int * x, unsigned short int * y, Tamanio tam)
 {
@@ -49,40 +51,57 @@ unsigned short int dameDificultad(Tamanio tam)
 	}
 }
 
-Cod_Error prepararJuego(Info * laInfoActual, Info * laInfoRespaldo, int opcion)
+Cod_Error prepararJuegoNuevo(Info * laInfoActual, Info * laInfoRespaldo)			/* Deja el tablero principal con dos fichas y todos ceros. */
 {
 	int result;
-	if (opcion == JUEGO_NUEVO)
-	{
-		unsigned short int x1, y1, x2, y2;
-		Ficha laFicha;
-		result = inicializarNuevo(laInfoActual);
-		if (result == ERROR_MEMORIA)
-			return ERROR_MEMORIA;
-		result = inicializarNuevo(laInfoRespaldo);
-		if (result == ERROR_MEMORIA)
-		{
-			liberarTablero(laInfoActual);
-			return ERROR_MEMORIA;
-		}
-		
-		/* Ponemos la primera ficha */
-		fichaAlAzar(&laFicha, &x1, &y1, laInfoActual->tamanio);
-		laInfoActual->tablero[x1][y1] = laFicha;
-		
-		/* Ponemos la segunda ficha */
-		do
-			fichaAlAzar(&laFicha, &x2, &y2, laInfoActual->tamanio);
-		while(x2 == x1 && y2 == y1);
-		laInfoActual->tablero[x2][y2] = laFicha;
 
-		return result;
-	}
-	else if (opcion == CARGAR_JUEGO)
+	unsigned short int x1, y1, x2, y2;										/* Coordenadas de las 2 fichas a agregar. */
+	Ficha laFicha;
+	laInfoRespaldo->tamanio = laInfoActual->tamanio;						/* Le asigna al estado de respaldo el mismo tamanio para poder inicializarlo */
+
+	result = inicializarNuevo(laInfoActual);
+
+	if (result == ERROR_MEMORIA)
+		return ERROR_MEMORIA;
+
+	result = inicializarNuevo(laInfoRespaldo);
+
+	if (result == ERROR_MEMORIA)
 	{
-		/*cargar juego*/
+		liberarTablero(laInfoActual);
+		return ERROR_MEMORIA;
 	}
+	
+
+	fichaAlAzar(&laFicha, &x1, &y1, laInfoActual->tamanio);					/* Ponemos la primera ficha. */
+	laInfoActual->tablero[x1][y1] = laFicha;
+	do
+		fichaAlAzar(&laFicha, &x2, &y2, laInfoActual->tamanio);				/* Ponemos la segunda ficha. */
+	while(x2 == x1 && y2 == y1);
+
+	laInfoActual->tablero[x2][y2] = laFicha;
+	return result;
 }
+
+Cod_Error cargarJuego(Info * laInfoActual, Info * laInfoRespaldo)
+{
+	laInfoActual->tablero = crearTablero(laInfoActual->tamanio);
+
+	if(laInfoActual->tablero == NULL)
+		return ERROR_MEMORIA;
+		
+	laInfoRespaldo->tablero = crearTablero(laInfoRespaldo->tamanio);
+
+	if(laInfoRespaldo->tablero == NULL)
+	{
+		liberarTablero(laInfoActual);
+		return ERROR_MEMORIA;
+	}
+
+	/* parte de cargado*/
+	return OK;	/*cambiar dsp */
+}
+
 
 static Cod_Error inicializarNuevo(Info * laInfo)
 {
@@ -122,12 +141,15 @@ static Tablero crearTablero(unsigned short int tamanio)
 	unsigned short int i;
 	Tablero tablero;
 	
-	tablero = malloc(tamanio*sizeof(tablero[0]));
+	tablero = malloc(tamanio * sizeof(tablero[0]));
+
 	if (tablero == NULL)
 		return NULL;
+	
 	for (i = 0; i < tamanio; i++)
 	{
-		tablero[i] = malloc(tamanio*sizeof(tablero[0][0]));
+		tablero[i] = malloc(tamanio * sizeof(tablero[0][0]));
+		
 		if (tablero[i] == NULL)
 		{
 			for (; i >= 0; i--)
@@ -199,8 +221,11 @@ static Cod_Error ponerFicha(Info * laInfo, char ultimaDireccion)
 
 unsigned short int validarJugadas(Info * laInfo)
 {	/* Falta hacerla */
-	laInfo->jugadasValidas[0] = 'w';
-	laInfo->jugadasValidas[1] = 'u';
+	if(laInfo->undoPosible && laInfo->undos > 0)
+		laInfo->jugadasValidas[0] = 'u';
+	else
+		laInfo->jugadasValidas[0] = 0;
+	
 	return 2;
 }
 

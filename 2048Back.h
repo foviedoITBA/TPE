@@ -4,7 +4,8 @@
 #include <stdlib.h>
 #include <time.h>
 
-#define FICHA_NUEVA() ((rand() / (double) RAND_MAX) <= 0.89 ? 2 : 4)
+#define FICHA_NUEVA()	((rand() / (double) RAND_MAX) <= 0.89 ? 2 : 4)
+#define randomizeSeed()	srand(time(0))
 
 #define UNDOS_FACIL 8
 #define UNDOS_MEDIO 4
@@ -20,13 +21,14 @@
 
 #define MAX_FILE_NAME_SIZE 51
 
-#define ARRIBA 'w'
-#define ABAJO 's'
-#define IZQUIERDA 'a'
-#define DERECHA 'd'
-#define QUIT 'q'
-#define GUARDAR 'g'
-#define UNDO 'u'
+#define ARRIBA 		'w'
+#define ABAJO 		's'
+#define IZQUIERDA 	'a'
+#define DERECHA 	'd'
+#define UNDO	 	'u'
+#define GUARDAR	 	'g'
+#define QUIT 		'q'
+
 
 #define MAX_JUGADAS 5 /*4 direcciones y undo*/
 
@@ -59,7 +61,8 @@ typedef struct
 } Info;
 
 unsigned short int dameTamanio(unsigned int);
-Cod_Error prepararJuego(Info*, Info*, int);
+Cod_Error prepararJuegoNuevo(Info*, Info*);
+Cod_Error cargarJuego(Info *, Info *);
 void actualizarInfo(Info*,Info*, char);
 unsigned short int validarJugadas(Info*);
 
