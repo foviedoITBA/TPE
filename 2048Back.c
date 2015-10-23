@@ -12,7 +12,10 @@ static int recorrerTablero(const Info *, char, posicionLibre *);
 static int recorrerTableroIzquierdaoDerecha(const Info *, char, posicionLibre *);
 static int recorrerTableroArribaoAbajo(const Info *, char, posicionLibre *);
 static void mover(Info*,char);
-
+static BOOL validarArriba(const Info*, unsigned short int, unsigned short int);
+static BOOL validarAbajo(const Info*, unsigned short int, unsigned short int);
+static BOOL validarIzquierda(const Info*, unsigned short int, unsigned short int);
+static BOOL validarDerecha(const Info*, unsigned short int, unsigned short int);
 
 static void fichaAlAzar(Ficha * laFicha, unsigned short int * x, unsigned short int * y, Tamanio tam)
 {
@@ -72,11 +75,13 @@ Cod_Error prepararJuegoNuevo(Info * laInfoActual, Info * laInfoRespaldo)			/* De
 		return ERROR_MEMORIA;
 	}
 	
-
-	fichaAlAzar(&laFicha, &x1, &y1, laInfoActual->tamanio);					/* Ponemos la primera ficha. */
+	/* Ponemos la primera ficha. */
+	fichaAlAzar(&laFicha, &x1, &y1, laInfoActual->tamanio);					
 	laInfoActual->tablero[x1][y1] = laFicha;
+	
+	/* Ponemos la segunda ficha. */
 	do
-		fichaAlAzar(&laFicha, &x2, &y2, laInfoActual->tamanio);				/* Ponemos la segunda ficha. */
+		fichaAlAzar(&laFicha, &x2, &y2, laInfoActual->tamanio);				
 	while(x2 == x1 && y2 == y1);
 
 	laInfoActual->tablero[x2][y2] = laFicha;
@@ -221,12 +226,86 @@ static Cod_Error ponerFicha(Info * laInfo, char ultimaDireccion)
 
 unsigned short int validarJugadas(Info * laInfo)
 {	/* Falta hacerla */
-	if(laInfo->undoPosible && laInfo->undos > 0)
-		laInfo->jugadasValidas[0] = 'u';
-	else
-		laInfo->jugadasValidas[0] = 0;
-	
-	return 2;
+	BOOL arriba_valida = FALSE, abajo_valida = FALSE, izquierda_valida = FALSE, derecha_valida = FALSE;
+	unsigned short int i, j, cantJugadas = 0;
+	for (i = 0; i < laInfo->tamanio && cantJugadas < 4; i++)
+		for (j = 0; j < laInfo->tamanio && cantJugadas < 4; j++)
+		{
+			if (arriba_valida == FALSE)
+				arriba_valida = validarArriba(laInfo, i, j);
+			if (abajo_valida == FALSE)
+				abajo_valida = validarAbajo(laInfo, i, j);
+			if (izquierda_valida == FALSE)
+				izquierda_valida = validarIzquierda(laInfo, i, j);
+			if (derecha_valida == FALSE)
+				derecha_valida = validarDerecha(laInfo, i, j);
+		}
+
+	if (arriba_valida == TRUE)
+		laInfo->jugadasValidas[cantJugadas++] = ARRIBA;
+	if (abajo_valida == TRUE)
+		laInfo->jugadasValidas[cantJugadas++] = ABAJO;
+	if (izquierda_valida == TRUE)
+		laInfo->jugadasValidas[cantJugadas++] = IZQUIERDA;
+	if (derecha_valida == TRUE)
+		laInfo->jugadasValidas[cantJugadas++] = DERECHA;
+
+	if (laInfo->undoPosible == TRUE && laInfo->undos > 0)
+		laInfo->jugadasValidas[cantJugadas++] = UNDO;
+
+	return cantJugadas;
+}
+
+static BOOL validarArriba(const Info * laInfo, unsigned short int i, unsigned short int j)
+{
+	if (laInfo->tablero[i][j] == 0)
+		return FALSE;
+	if (i == 0)
+		return FALSE;
+	if (laInfo->tablero[i][j] == laInfo->tablero[i-1][j])
+		return TRUE;
+	if (laInfo->tablero[i-1][j] == 0)
+		return TRUE;
+	return FALSE;
+}
+
+static BOOL validarAbajo(const Info * laInfo, unsigned short int i, unsigned short int j)
+{
+	if (laInfo->tablero[i][j] == 0)
+		return FALSE;
+	if (i == laInfo->tamanio - 1)
+		return FALSE;
+	if (laInfo->tablero[i][j] == laInfo->tablero[i+1][j])
+		return TRUE;
+	if (laInfo->tablero[i+1][j] == 0)
+		return TRUE;
+	return FALSE;
+}
+
+static BOOL validarIzquierda(const Info * laInfo, unsigned short int i, unsigned short int j)
+{
+	if (laInfo->tablero[i][j] == 0)
+		return FALSE;
+	if (j == 0)
+		return FALSE;
+	if (laInfo->tablero[i][j] == laInfo->tablero[i][j-1])
+		return TRUE;
+	if (laInfo->tablero[i][j-1] == 0)
+		return TRUE;
+	return FALSE;
+}
+
+static BOOL validarDerecha(const Info * laInfo, unsigned short int i, unsigned short int j)
+{
+	if (laInfo->tablero[i][j] == 0)
+		return FALSE;
+	if (j == laInfo->tamanio - 1)
+		return FALSE;
+	if (laInfo->tablero[i][j] == laInfo->tablero[i][j+1])
+		return TRUE;
+	if (laInfo->tablero[i][j+1] == 0)
+		return TRUE;
+	return FALSE;
 }
 
 static int recorrerTablero(const Info * laInfo, char direccion, posicionLibre * posiciones)		/* Se requieren dos funciones: 			*/

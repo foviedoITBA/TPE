@@ -24,23 +24,6 @@ void imprimirTablero(const Info *);
 void imprimirOpciones();
 void imprimirPuntajeyUndos(Info *);
 
-void verQueOnda(Info * laInfo)
-{
-	int i, j;
-	unsigned short int tamanio;
-	limpiarPantalla();
-	printf("\n");
-	for (i = 0; i < laInfo->tamanio; i++)
-	{
-		for (j = 0; j < laInfo->tamanio; j++)
-			printf("%hu", laInfo->tablero[i][j]);
-		printf("\n");
-	}
-	printf("\n\n");
-
-	printf("Undos: %hu\nPuntaje: %u\n", laInfo->undos, laInfo->puntaje);
-}
-
 int main(void)
 {
 	Info infoActual, infoRespaldo;
@@ -241,18 +224,18 @@ void imprimirTablero(const Info * laInfo)
 
 void imprimirOpciones()
 {
-	printf("Arriba:\t\t%c\n",  ARRIBA, UNDO, GUARDAR, QUIT);
-	printf("Abajo:\t\t%c\n",   ABAJO);
+	printf("Arriba:\t\t%c\n", ARRIBA, UNDO, GUARDAR, QUIT);
+	printf("Abajo:\t\t%c\n", ABAJO);
 	printf("Izquierda:\t%c\n", IZQUIERDA );
 	printf("Derecha:\t%c\n", DERECHA );
 	printf("Undo:\t\t%c\n", UNDO);
 	printf("Guardar:\t%c\n", GUARDAR);
-	printf("Quit:\t\t%c\n",QUIT);
+	printf("Quit:\t\t%c\n", QUIT);
 }
 
 void imprimirPuntajeyUndos(Info * laInfoActual)
 {
-	printf("Puntaje:\t%d.\n",laInfoActual->puntaje);
-	printf("Undo posible:\t%s.\n", laInfoActual->undoPosible? "Si" : "No");
-	printf("Undos:\t\t%d.\n", laInfoActual->undos);
+	printf("Puntaje:\t%d\n",laInfoActual->puntaje);
+	printf("Undo posible:\t%s\n", laInfoActual->undoPosible? "Si" : "No");
+	printf("Undos:\t\t%d\n", laInfoActual->undos);
 }
