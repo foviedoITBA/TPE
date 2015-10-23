@@ -35,6 +35,8 @@
 typedef enum {OK = 0, ERROR_MEMORIA = -1, ERROR_ARCHIVO = -2} Cod_Error;
 typedef enum {FALSE = 0, TRUE} BOOL;
 
+typedef enum {NADA, NUMERO} Estado;
+
 enum {JUEGO_NUEVO = 1, CARGAR_JUEGO, SALIR};
 enum {DIF_FACIL = 1, DIF_MEDIO, DIF_DIFICIL};
 
@@ -58,6 +60,7 @@ typedef struct
 	Tablero tablero;
 	char jugadasValidas[MAX_JUGADAS];
 	char * nombreArchivoCarga;
+	BOOL ganaste;
 } Info;
 
 unsigned short int dameTamanio(unsigned int);
@@ -65,6 +68,6 @@ Cod_Error prepararJuegoNuevo(Info*, Info*);
 Cod_Error cargarJuego(Info *, Info *);
 void actualizarInfo(Info*,Info*, char);
 unsigned short int validarJugadas(Info*);
-
+unsigned short int dameVictoria(unsigned short int);
 
 #endif

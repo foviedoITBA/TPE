@@ -54,6 +54,21 @@ unsigned short int dameDificultad(Tamanio tam)
 	}
 }
 
+unsigned short int dameVictoria(unsigned short int dif)
+{
+	switch(dif)
+	{
+		case DIF_FACIL:
+			return VICTORIA_FACIL;
+		case DIF_MEDIO:
+			return VICTORIA_MEDIO;
+		case DIF_DIFICIL:
+			return VICTORIA_DIFICIL;
+		default:
+			return 0;
+	}
+}
+
 Cod_Error prepararJuegoNuevo(Info * laInfoActual, Info * laInfoRespaldo)			/* Deja el tablero principal con dos fichas y todos ceros. */
 {
 	int result;
@@ -75,13 +90,14 @@ Cod_Error prepararJuegoNuevo(Info * laInfoActual, Info * laInfoRespaldo)			/* De
 		return ERROR_MEMORIA;
 	}
 	
+	randomizeSeed();
 	/* Ponemos la primera ficha. */
 	fichaAlAzar(&laFicha, &x1, &y1, laInfoActual->tamanio);					
 	laInfoActual->tablero[x1][y1] = laFicha;
 	
 	/* Ponemos la segunda ficha. */
 	do
-		fichaAlAzar(&laFicha, &x2, &y2, laInfoActual->tamanio);				
+		fichaAlAzar(&laFicha, &x2, &y2, laInfoActual->tamanio);
 	while(x2 == x1 && y2 == y1);
 
 	laInfoActual->tablero[x2][y2] = laFicha;
@@ -103,6 +119,7 @@ Cod_Error cargarJuego(Info * laInfoActual, Info * laInfoRespaldo)
 		return ERROR_MEMORIA;
 	}
 
+	randomizeSeed();
 	/* parte de cargado*/
 	return OK;	/*cambiar dsp */
 }
@@ -137,6 +154,7 @@ static Cod_Error inicializarNuevo(Info * laInfo)
 
 	laInfo->undoPosible = FALSE;
 	laInfo->nombreArchivoCarga = NULL;
+	laInfo->ganaste = FALSE;
 
 	return OK;
 }
@@ -203,7 +221,69 @@ static void copiarInfo(Info * infoDestino, const Info * infoFuente)
 }
 
 static void mover(Info * laInfo, char direccion)
-{	/* Falta hacerla */
+{	
+	int incJ, incK;
+	Estado estado;
+	int index, i, j;
+	Ficha ficha;
+	if (direccion == DERECHA)
+	{
+		incJ = -1;
+		incK = 1;
+	}
+	else if (direccion == IZQUIERDA)
+	{
+		incJ = 1;
+		incK = -1;
+	}
+	else
+		return;
+	for (i = 0; i < laInfo->tamanio; i++)
+	{
+		estado = NADA;
+		if (direccion == DERECHA)
+			j = laInfo->tamanio-1;
+		else if (direccion == IZQUIERDA)
+			j = 0;
+		for (; j >= 0 && j < laInfo->tamanio; j += incJ)
+		{
+			switch(estado)
+			{
+				case NADA:
+					if (laInfo->tablero[i][j] != 0)
+					{
+						signed short int k = 0;
+						ficha = laInfo->tablero[i][j];
+						for (k = j; ((k < laInfo->tamanio - 1 && k > 0) || (k + incK < laInfo->tamanio - 1 && k + incK > 0)) && laInfo->tablero[i][k+incK] == 0; k += incK);
+						laInfo->tablero[i][j] = 0;
+						laInfo->tablero[i][k] = ficha;
+						index = k;
+						estado = NUMERO;
+					}
+					break;
+				case NUMERO:
+					if (laInfo->tablero[i][j] == ficha)
+					{
+						laInfo->puntaje += 2*ficha;
+						if (2*ficha == dameVictoria(dameDificultad(laInfo->tamanio)))
+							laInfo->ganaste = TRUE;
+						laInfo->tablero[i][j] = 0;
+						laInfo->tablero[i][index] = 2*ficha;
+						estado = NADA;
+					}
+					else if (laInfo->tablero[i][j] != 0)
+					{
+						signed int k;
+						ficha = laInfo->tablero[i][j];
+						for (k = j; ((k < laInfo->tamanio - 1 && k > 0) || (k + incK < laInfo->tamanio - 1 && k + incK > 0)) && k > 0 && laInfo->tablero[i][k+incK] == 0; k+=incK);
+						laInfo->tablero[i][k] = ficha;
+						laInfo->tablero[i][j] = 0;
+						index = k;
+					}
+					break;
+			}
+		}
+	}
 	return;
 }
 

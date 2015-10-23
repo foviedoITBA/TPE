@@ -29,8 +29,7 @@ int main(void)
 	Info infoActual, infoRespaldo;
 	Cod_Error hubo_error;
 	int opcion = menuPrincipal(&infoActual);
-	randomizeSeed();
-
+	
 	switch(opcion)
 	{
 		case SALIR:
@@ -209,18 +208,21 @@ void imprimirTablero(const Info * laInfo)
 	recuadro = (4 * tamanio) + tamanio + 1; 						/*(pongo el tamanio+1 porque son los * que separan a los numeros en cada fila) */
 
 	for (h = 0; h < recuadro; h++) 									/*se que queda muy villero poner las lineas horizontales que separan las filas asi pero googlie y no hay otra forma	*/
-		printf("*");												/*para hacerlo, solo se puede hacer con loops porque no hay otra forma de hacer un "imprimime x numero de veces un	*/
+		printf("-");												/*para hacerlo, solo se puede hacer con loops porque no hay otra forma de hacer un "imprimime x numero de veces un	*/
 	printf("\n");													/*caracter"																											*/
 	for(i=0; i < tamanio; i++)										/*El for que hace printf * podria ser una macro, right?*/
 		{
 			for (j = 0; j < tamanio; j++)
-					printf("*%4d", laInfo->tablero[i][j]);
-			printf("*\n");
+				if (laInfo->tablero[i][j] ==0 )
+					printf("|    ");
+				else
+					printf("|%4d", laInfo->tablero[i][j]);
+			printf("|\n");
 			for (h = 0; h < recuadro; h++)
-				printf("*");
+				printf("-");
 			printf("\n");
 		}
-} 
+}
 
 void imprimirOpciones()
 {
@@ -236,6 +238,6 @@ void imprimirOpciones()
 void imprimirPuntajeyUndos(Info * laInfoActual)
 {
 	printf("Puntaje:\t%d\n",laInfoActual->puntaje);
-	printf("Undo posible:\t%s\n", laInfoActual->undoPosible? "Si" : "No");
+	printf("Undo posible:\t%s\n", laInfoActual->undoPosible ? "Si" : "No");
 	printf("Undos:\t\t%d\n", laInfoActual->undos);
 }
