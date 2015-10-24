@@ -155,7 +155,7 @@ static Cod_Error inicializarNuevo(Info * laInfo)
 			laInfo->tablero[i][j] = 0;
 
 	laInfo->undoPosible = FALSE;
-	laInfo->nombreArchivoCarga = NULL;
+	laInfo->nombreArchivo = NULL;
 	laInfo->ganaste = FALSE;
 
 	return OK;

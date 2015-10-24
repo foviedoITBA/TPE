@@ -15,7 +15,7 @@ void limpiarPantalla();
 int menuPrincipal(Info*);
 int leerOpcion(int);
 void menuDificultad(Info*);
-void menuCargar(Info*);
+char * menuCargarGuardar(Info*);
 char * leerNombreArchivo();
 Cod_Error jugar(Info*, Info*);
 unsigned short int validarJugadas(Info*);
@@ -23,6 +23,7 @@ char leerJugada(const char *, unsigned short int);
 void imprimirTablero(const Info *);
 void imprimirOpciones();
 void imprimirPuntajeyUndos(Info *);
+FILE * guardaPartida(Info * laInfo);
 
 int main(void)
 {
@@ -88,7 +89,7 @@ int menuPrincipal(Info * laInfo)
 			menuDificultad(laInfo);
 			break;
 		case CARGAR_JUEGO:
-			menuCargar(laInfo);
+			menuCargarGuardar(laInfo);
 			break;
 		case SALIR:
 			break;
@@ -125,10 +126,10 @@ void menuDificultad(Info * laInfo)
 	laInfo->tamanio = dameTamanio(leerOpcion(CANT_DIFICULTADES));
 }
 
-void menuCargar(Info * laInfo)
+char * menuCargarGuardar(Info * laInfo)
 {
 	printf("Ingrese el nombre del archivo: ");
-	laInfo->nombreArchivoCarga = leerNombreArchivo();
+	return leerNombreArchivo();
 }
 
 char * leerNombreArchivo()
@@ -169,10 +170,11 @@ Cod_Error jugar(Info * laInfoActual, Info * laInfoRespaldo)
 		switch(jugada)
 		{
 			case QUIT:
-				/* Algo para guardar y salir */
+				
 				break;
 			case GUARDAR:
-				/* Algo para guardar */
+				laInfoActual->nombreArchivo = menuCargarGuardar(laInfoActual);
+				guardaPartida(laInfoActual);
 				break;
 			default:
 				hubo_error = actualizarInfo(laInfoActual, laInfoRespaldo, jugada);
@@ -243,4 +245,22 @@ void imprimirPuntajeyUndos(Info * laInfoActual)
 	printf("Puntaje:\t%d\n",laInfoActual->puntaje);
 	printf("Undo posible:\t%s\n", laInfoActual->undoPosible ? "Si" : "No");
 	printf("Undos:\t\t%d\n", laInfoActual->undos);
+}
+
+FILE * guardaPartida(Info * laInfo)
+{
+	int i,j;
+	unsigned short int dif = dameDificultad(laInfo->tamanio);
+	FILE * archivoGuarda;
+
+	archivoGuarda = fopen(laInfo->nombreArchivo, "wb");
+	
+	fwrite(&dif, sizeof(unsigned short int), 1, archivoGuarda);
+	fwrite("hola", 1, 4, archivoGuarda);
+	fwrite(&laInfo->puntaje, sizeof(Puntaje), 1, archivoGuarda);
+	
+	for(i = 0; i < laInfo->tamanio ; i++)
+		fwrite(laInfo->tablero[i], sizeof(laInfo->tablero[0][0]), laInfo->tamanio, archivoGuarda);
+
+	return archivoGuarda;
 }
