@@ -59,7 +59,7 @@ typedef struct
 	BOOL undoPosible;
 	Tablero tablero;
 	char jugadasValidas[MAX_JUGADAS];
-	char * nombreArchivoCarga;
+	char * nombreArchivo;
 	BOOL ganaste;
 } Info;
 
@@ -71,3 +71,4 @@ unsigned short int validarJugadas(Info*);
 unsigned short int dameVictoria(unsigned short int);
 
 #endif
+
