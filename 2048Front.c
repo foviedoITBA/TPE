@@ -23,13 +23,14 @@ char leerJugada(const char *, unsigned short int);
 void imprimirTablero(const Info *);
 void imprimirOpciones();
 void imprimirPuntajeyUndos(Info *);
-FILE * guardaPartida(Info * laInfo);
 
 int main(void)
 {
 	Info infoActual, infoRespaldo;
 	Cod_Error hubo_error;
-	int opcion = menuPrincipal(&infoActual);
+	int opcion;
+
+	opcion = menuPrincipal(&infoActual);
 	
 	switch(opcion)
 	{
@@ -41,6 +42,7 @@ int main(void)
 				break;
 		case CARGAR_JUEGO:
 				hubo_error = cargarJuego(&infoActual, &infoRespaldo);
+				BORRA_BUFFER();
 				break;
 	}
 	
@@ -89,7 +91,7 @@ int menuPrincipal(Info * laInfo)
 			menuDificultad(laInfo);
 			break;
 		case CARGAR_JUEGO:
-			menuCargarGuardar(laInfo);
+			laInfo->nombreArchivo = menuCargarGuardar(laInfo);
 			break;
 		case SALIR:
 			break;
@@ -141,7 +143,7 @@ char * leerNombreArchivo()
 	if(nombreArchivo == NULL)
 		return NULL;
 
-	sprintf(format, "%%%ds", MAX_FILE_NAME_SIZE-1);
+	sprintf(format, "%%%ds", MAX_FILE_NAME_SIZE-1);											/* Utilizamos este sprintf para poder poner MAX_FILE_NAME_SIZE, en vez de un magic number. */
 	scanf(format, nombreArchivo);
 
 	nombreArchivo = realloc(nombreArchivo, strlen(nombreArchivo)*sizeof(nombreArchivo[0]));
@@ -175,6 +177,7 @@ Cod_Error jugar(Info * laInfoActual, Info * laInfoRespaldo)
 			case GUARDAR:
 				laInfoActual->nombreArchivo = menuCargarGuardar(laInfoActual);
 				guardaPartida(laInfoActual);
+				BORRA_BUFFER();
 				break;
 			default:
 				hubo_error = actualizarInfo(laInfoActual, laInfoRespaldo, jugada);
@@ -196,9 +199,10 @@ char leerJugada(const char * jugadasValidas, unsigned short int cantJugadas)
 		BORRA_BUFFER();
 		if (c == QUIT || c == GUARDAR)
 			valida = TRUE;
-		for (i = 0; i < cantJugadas && !valida; i++)
-			if (c == jugadasValidas[i])
-				valida = TRUE;
+		else
+			for (i = 0; i < cantJugadas && !valida; i++)
+				if (c == jugadasValidas[i])
+					valida = TRUE;
 		if (valida == FALSE)
 			printf("JUGADA INVÁLIDA\n");
 	} while (valida == FALSE);
@@ -247,20 +251,3 @@ void imprimirPuntajeyUndos(Info * laInfoActual)
 	printf("Undos:\t\t%d\n", laInfoActual->undos);
 }
 
-FILE * guardaPartida(Info * laInfo)
-{
-	int i,j;
-	unsigned short int dif = dameDificultad(laInfo->tamanio);
-	FILE * archivoGuarda;
-
-	archivoGuarda = fopen(laInfo->nombreArchivo, "wb");
-	
-	fwrite(&dif, sizeof(unsigned short int), 1, archivoGuarda);
-	fwrite("hola", 1, 4, archivoGuarda);
-	fwrite(&laInfo->puntaje, sizeof(Puntaje), 1, archivoGuarda);
-	
-	for(i = 0; i < laInfo->tamanio ; i++)
-		fwrite(laInfo->tablero[i], sizeof(laInfo->tablero[0][0]), laInfo->tamanio, archivoGuarda);
-
-	return archivoGuarda;
-}

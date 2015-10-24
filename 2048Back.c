@@ -108,22 +108,42 @@ Cod_Error prepararJuegoNuevo(Info * laInfoActual, Info * laInfoRespaldo)			/* De
 
 Cod_Error cargarJuego(Info * laInfoActual, Info * laInfoRespaldo)
 {
-	laInfoActual->tablero = crearTablero(laInfoActual->tamanio);
+	FILE * archivoCarga;
+	unsigned short int dif;
+	int i,j;
+	randomizeSeed();
+	
+	laInfoActual->undoPosible = FALSE;
 
+	archivoCarga = fopen(laInfoActual->nombreArchivo, "rb");
+	
+	
+
+	fread(&dif, sizeof(dif), 1, archivoCarga);
+	
+	laInfoActual->tamanio = dameTamanio(dif);
+	laInfoRespaldo->tamanio = laInfoActual->tamanio;
+	laInfoActual->undoPosible = FALSE;
+	laInfoActual->undoPosible = FALSE;
+
+	laInfoActual->tablero = crearTablero(laInfoActual->tamanio);
 	if(laInfoActual->tablero == NULL)
 		return ERROR_MEMORIA;
-		
+	
 	laInfoRespaldo->tablero = crearTablero(laInfoRespaldo->tamanio);
-
 	if(laInfoRespaldo->tablero == NULL)
 	{
 		liberarTablero(laInfoActual);
 		return ERROR_MEMORIA;
 	}
+	
+	fread(&(laInfoActual->puntaje), sizeof(Puntaje), 1, archivoCarga);
+	fread(&(laInfoActual->undos), sizeof(unsigned short int), 1, archivoCarga);
+	for(i = 0; i < laInfoActual->tamanio; i++)
+		fread(laInfoActual->tablero[i], sizeof(Ficha), laInfoActual->tamanio, archivoCarga);
 
-	randomizeSeed();
-	/* parte de cargado*/
-	return OK;	/*cambiar dsp */
+	fclose(archivoCarga);
+	return OK;
 }
 
 
@@ -562,4 +582,22 @@ static int recorrerTableroArribaoAbajo(const Info * laInfo, char direccion, posi
 	}
 	
 	return cant;
+}
+
+
+void guardaPartida(Info * laInfo)
+{
+	int i,j;
+	unsigned short int dif = dameDificultad(laInfo->tamanio);
+	FILE * archivoGuarda;
+
+	archivoGuarda = fopen(laInfo->nombreArchivo, "wb");
+	
+	fwrite(&dif, sizeof(unsigned short int), 1, archivoGuarda);
+	fwrite(&(laInfo->puntaje), sizeof(Puntaje), 1, archivoGuarda);	
+	fwrite(&(laInfo->undos), sizeof(unsigned short int), 1, archivoGuarda);
+	for(i = 0; i < laInfo->tamanio ; i++)
+		fwrite(laInfo->tablero[i], sizeof(laInfo->tablero[0][0]), laInfo->tamanio, archivoGuarda);
+
+	fclose(archivoGuarda);
 }

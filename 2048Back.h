@@ -69,6 +69,7 @@ Cod_Error cargarJuego(Info *, Info *);
 Cod_Error actualizarInfo(Info*,Info*, char);
 unsigned short int validarJugadas(Info*);
 unsigned short int dameVictoria(unsigned short int);
+void guardaPartida(Info * laInfo);
 
 #endif
 
