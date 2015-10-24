@@ -66,7 +66,7 @@ typedef struct
 unsigned short int dameTamanio(unsigned int);
 Cod_Error prepararJuegoNuevo(Info*, Info*);
 Cod_Error cargarJuego(Info *, Info *);
-void actualizarInfo(Info*,Info*, char);
+Cod_Error actualizarInfo(Info*,Info*, char);
 unsigned short int validarJugadas(Info*);
 unsigned short int dameVictoria(unsigned short int);
 

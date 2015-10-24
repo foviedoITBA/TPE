@@ -152,6 +152,7 @@ Cod_Error jugar(Info * laInfoActual, Info * laInfoRespaldo)
 {
 	unsigned short int cantJugadas;
 	char jugada;
+	Cod_Error hubo_error;
 	do
 	{
 		limpiarPantalla();
@@ -174,7 +175,9 @@ Cod_Error jugar(Info * laInfoActual, Info * laInfoRespaldo)
 				/* Algo para guardar */
 				break;
 			default:
-				actualizarInfo(laInfoActual, laInfoRespaldo, jugada);
+				hubo_error = actualizarInfo(laInfoActual, laInfoRespaldo, jugada);
+				if (hubo_error != OK){printf("Error al poner ficha");}
+				
 		}
 
 	} while(jugada != QUIT);
@@ -226,7 +229,7 @@ void imprimirTablero(const Info * laInfo)
 
 void imprimirOpciones()
 {
-	printf("Arriba:\t\t%c\n", ARRIBA, UNDO, GUARDAR, QUIT);
+	printf("Arriba:\t\t%c\n", ARRIBA);
 	printf("Abajo:\t\t%c\n", ABAJO);
 	printf("Izquierda:\t%c\n", IZQUIERDA );
 	printf("Derecha:\t%c\n", DERECHA );

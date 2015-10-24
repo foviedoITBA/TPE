@@ -12,6 +12,8 @@ static int recorrerTablero(const Info *, char, posicionLibre *);
 static int recorrerTableroIzquierdaoDerecha(const Info *, char, posicionLibre *);
 static int recorrerTableroArribaoAbajo(const Info *, char, posicionLibre *);
 static void mover(Info*,char);
+static void moverIzquierdaDerecha(Info*,char);
+static void moverArribaAbajo(Info*,char);
 static BOOL validarArriba(const Info*, unsigned short int, unsigned short int);
 static BOOL validarAbajo(const Info*, unsigned short int, unsigned short int);
 static BOOL validarIzquierda(const Info*, unsigned short int, unsigned short int);
@@ -195,19 +197,23 @@ static void liberarTablero(Info * laInfo)
 	laInfo->tablero = NULL;
 }
 
-void actualizarInfo(Info * laInfoActual, Info * laInfoRespaldo, char jugada)
+Cod_Error actualizarInfo(Info * laInfoActual, Info * laInfoRespaldo, char jugada)
 {
 	if (jugada == UNDO)
 	{
 		copiarInfo(laInfoActual, laInfoRespaldo);
 		laInfoActual->undos -= 1;
 		laInfoActual->undoPosible = FALSE;
+		return OK;
 	}
 	else
 	{
+		Cod_Error hubo_error;
 		copiarInfo(laInfoRespaldo, laInfoActual);
 		mover(laInfoActual, jugada);
+		hubo_error = ponerFicha(laInfoActual, jugada);
 		laInfoActual->undoPosible = TRUE;
+		return hubo_error;
 	}
 }
 
@@ -220,7 +226,15 @@ static void copiarInfo(Info * infoDestino, const Info * infoFuente)
 			infoDestino->tablero[i][j] = infoFuente->tablero[i][j];
 }
 
-static void mover(Info * laInfo, char direccion)
+static void mover(Info * laInfo, char jugada)
+{
+	if (jugada == IZQUIERDA || jugada == DERECHA)
+		moverIzquierdaDerecha(laInfo, jugada);
+	else
+		moverArribaAbajo(laInfo, jugada);
+}
+
+static void moverIzquierdaDerecha(Info * laInfo, char direccion)
 {	
 	int incJ, incK;
 	Estado estado;
@@ -252,7 +266,7 @@ static void mover(Info * laInfo, char direccion)
 				case NADA:
 					if (laInfo->tablero[i][j] != 0)
 					{
-						signed short int k = 0;
+						signed short int k;
 						ficha = laInfo->tablero[i][j];
 						for (k = j; ((k < laInfo->tamanio - 1 && k > 0) || (k + incK < laInfo->tamanio - 1 && k + incK > 0)) && laInfo->tablero[i][k+incK] == 0; k += incK);
 						laInfo->tablero[i][j] = 0;
@@ -273,18 +287,83 @@ static void mover(Info * laInfo, char direccion)
 					}
 					else if (laInfo->tablero[i][j] != 0)
 					{
-						signed int k;
+						signed short int k;
 						ficha = laInfo->tablero[i][j];
-						for (k = j; ((k < laInfo->tamanio - 1 && k > 0) || (k + incK < laInfo->tamanio - 1 && k + incK > 0)) && k > 0 && laInfo->tablero[i][k+incK] == 0; k+=incK);
-						laInfo->tablero[i][k] = ficha;
+						for (k = j; ((k < laInfo->tamanio - 1 && k > 0) || (k + incK < laInfo->tamanio - 1 && k + incK > 0)) && laInfo->tablero[i][k+incK] == 0; k+=incK);
 						laInfo->tablero[i][j] = 0;
+						laInfo->tablero[i][k] = ficha;
 						index = k;
 					}
 					break;
 			}
 		}
 	}
-	return;
+}
+
+static void moverArribaAbajo(Info * laInfo, char direccion)
+{
+	int incI, incK;
+	Estado estado;
+	int index, i, j;
+	Ficha ficha;
+	if (direccion == ABAJO)
+	{
+		incI = -1;
+		incK = 1;
+	}
+	else if (direccion == ARRIBA)
+	{
+		incI = 1;
+		incK = -1;
+	}
+	else
+		return;
+	for (j = 0; j < laInfo->tamanio; j++)
+	{
+		estado = NADA;
+		if (direccion == ABAJO)
+			i = laInfo->tamanio-1;
+		else if (direccion == ARRIBA)
+			i = 0;
+		for (; i >= 0 && i < laInfo->tamanio; i += incI)
+		{
+			switch(estado)
+			{
+				case NADA:
+					if (laInfo->tablero[i][j] != 0)
+					{
+						signed short int k = 0;
+						ficha = laInfo->tablero[i][j];
+						for (k = i; ((k < laInfo->tamanio - 1 && k > 0) || (k + incK < laInfo->tamanio - 1 && k + incK > 0)) && laInfo->tablero[k+incK][j] == 0; k += incK);
+						laInfo->tablero[i][j] = 0;
+						laInfo->tablero[k][j] = ficha;
+						index = k;
+						estado = NUMERO;
+					}
+					break;
+				case NUMERO:
+					if (laInfo->tablero[i][j] == ficha)
+					{
+						laInfo->puntaje += 2*ficha;
+						if (2*ficha == dameVictoria(dameDificultad(laInfo->tamanio)))
+							laInfo->ganaste = TRUE;
+						laInfo->tablero[i][j] = 0;
+						laInfo->tablero[index][j] = 2*ficha;
+						estado = NADA;
+					}
+					else if (laInfo->tablero[i][j] != 0)
+					{
+						signed int k;
+						ficha = laInfo->tablero[i][j];
+						for (k = i; ((k < laInfo->tamanio - 1 && k > 0) || (k + incK < laInfo->tamanio - 1 && k + incK > 0)) && laInfo->tablero[k+incK][j] == 0; k+=incK);
+						laInfo->tablero[i][j] = 0;
+						laInfo->tablero[k][j] = ficha;
+						index = k;
+					}
+					break;
+			}
+		}
+	}
 }
 
 static Cod_Error ponerFicha(Info * laInfo, char ultimaDireccion)
@@ -302,6 +381,9 @@ static Cod_Error ponerFicha(Info * laInfo, char ultimaDireccion)
 	auxRand = rand()%cantLibre;
 	
 	laInfo->tablero[posiciones[auxRand].x][posiciones[auxRand].y] = FICHA_NUEVA();
+
+	free(posiciones);
+	return OK;
 }
 
 unsigned short int validarJugadas(Info * laInfo)
@@ -401,7 +483,7 @@ static int recorrerTablero(const Info * laInfo, char direccion, posicionLibre * 
 static int recorrerTableroIzquierdaoDerecha(const Info * laInfo, char direccion, posicionLibre * posiciones)
 {
 	int i,j, cant = 0;
-	int libre;
+	BOOL libre;
 	unsigned short int posicionInicialFil, posicionInicialCol;
 	unsigned short int incrementoFil, incrementoCol;
 
@@ -423,14 +505,17 @@ static int recorrerTableroIzquierdaoDerecha(const Info * laInfo, char direccion,
 
 	for( i = posicionInicialFil; i <= laInfo->tamanio - 1 ; i += incrementoFil)
 	{
-		libre = 1;
-		for(j = posicionInicialCol; 0<= j && j <= laInfo->tamanio - 1 && libre ; j += incrementoCol)
+		libre = TRUE;
+		for(j = posicionInicialCol; 0<= j && j <= laInfo->tamanio - 1 && libre == TRUE ; j += incrementoCol)
 		{
 			if(laInfo->tablero[i][j] != 0)
-				libre = 0;
-			posiciones[cant].x = i;
-			posiciones[cant].y = j;
-			cant++;
+				libre = FALSE;
+			else
+			{
+				posiciones[cant].x = i;
+				posiciones[cant].y = j;
+				cant++;
+			}
 		}
 	}
 
@@ -441,7 +526,7 @@ static int recorrerTableroIzquierdaoDerecha(const Info * laInfo, char direccion,
 static int recorrerTableroArribaoAbajo(const Info * laInfo, char direccion, posicionLibre * posiciones)
 {
 	int i,j, cant = 0;
-	int libre;
+	BOOL libre;
 	unsigned short int posicionInicialFil, posicionInicialCol;
 	unsigned short int incrementoFil, incrementoCol;
 
@@ -460,17 +545,19 @@ static int recorrerTableroArribaoAbajo(const Info * laInfo, char direccion, posi
 			incrementoCol = +1;
 			break;
 	}
-	for(j = posicionInicialCol; j <= laInfo->tamanio - 1 && libre ; j += incrementoCol)
+	for(j = posicionInicialCol; j <= laInfo->tamanio - 1 ; j += incrementoCol)
 	{
-		libre = 1;
-		for( i = posicionInicialFil; 0 <= i && i <= laInfo->tamanio - 1 ; i += incrementoFil)
+		libre = TRUE;
+		for( i = posicionInicialFil; 0 <= i && i <= laInfo->tamanio - 1 && libre == TRUE ; i += incrementoFil)
 		{
 			if(laInfo->tablero[i][j] != 0)
-				libre = 0;
-
-			posiciones[cant].x = i;
-			posiciones[cant].y = j;
-			cant++;
+				libre = FALSE;
+			else
+			{
+				posiciones[cant].x = i;
+				posiciones[cant].y = j;
+				cant++;
+			}
 		}
 	}
 	
