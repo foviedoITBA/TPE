@@ -26,9 +26,9 @@
 #define ABAJO 		's'
 #define IZQUIERDA	'a'
 #define DERECHA 	'd'
-#define UNDO	 		'u'
-#define GUARDAR	 	'g'
-#define QUIT 			'q'
+#define UNDO	 	"undo"
+#define SAVE	 	"save"
+#define QUIT 		"quit"
 
 #define MAX_JUGADAS	5	/*4 direcciones y undo.*/
 
