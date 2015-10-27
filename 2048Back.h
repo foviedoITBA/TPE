@@ -2,9 +2,10 @@
 #define BACK_H
 
 #include <stdlib.h>
+#include <stdio.h>		/* Esta aqui pues 2048Back.c utiliza funciones de archivo, definidas en stdio. */ 
 #include <time.h>
 
-#define FICHA_NUEVA()	((rand() / (double) RAND_MAX) <= 0.89 ? 2 : 4)
+#define VALOR_FICHA_NUEVA()	((rand() / (double) RAND_MAX) <= 0.89 ? 2 : 4)	/*	Retorna 2 o 4, los valores que puede tomar una ficha nueva.	*/
 #define randomizeSeed()	srand(time(0))
 
 #define UNDOS_FACIL 8
@@ -29,8 +30,7 @@
 #define GUARDAR	 	'g'
 #define QUIT 		'q'
 
-
-#define MAX_JUGADAS 5 /*4 direcciones y undo*/
+#define MAX_JUGADAS	5	/*4 direcciones y undo.*/
 
 typedef enum {OK = 0, ERROR_MEMORIA = -1, ERROR_ARCHIVO = -2} Cod_Error;
 typedef enum {FALSE = 0, TRUE} BOOL;
@@ -65,7 +65,7 @@ typedef struct
 
 unsigned short int dameTamanio(unsigned int);
 Cod_Error prepararJuegoNuevo(Info*, Info*);
-Cod_Error cargarJuego(Info *, Info *);
+Cod_Error cargarPartida(Info *, Info *);
 Cod_Error actualizarInfo(Info*,Info*, char);
 unsigned short int validarJugadas(Info*);
 unsigned short int dameVictoria(unsigned short int);

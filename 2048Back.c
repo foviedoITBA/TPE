@@ -1,12 +1,10 @@
 #include "2048Back.h"
-#include <stdio.h> 			/* BORRAR DESPUES */
 
 static Cod_Error inicializarNuevo(Info *);
 static Tablero crearTablero(unsigned short int);
 static void liberarTablero(Info*);
-static void fichaAlAzar(Ficha*, unsigned short int*, unsigned short int*, Tamanio);
+static void fichasIniciales(Ficha*, unsigned short int*, unsigned short int*, Tamanio);
 static void copiarInfo(Info*, const Info*);
-static void mover(Info*, char);
 static Cod_Error ponerFicha(Info *, char);
 static int recorrerTablero(const Info *, char, posicionLibre *);
 static int recorrerTableroIzquierdaoDerecha(const Info *, char, posicionLibre *);
@@ -19,14 +17,14 @@ static BOOL validarAbajo(const Info*, unsigned short int, unsigned short int);
 static BOOL validarIzquierda(const Info*, unsigned short int, unsigned short int);
 static BOOL validarDerecha(const Info*, unsigned short int, unsigned short int);
 
-static void fichaAlAzar(Ficha * laFicha, unsigned short int * x, unsigned short int * y, Tamanio tam)
+static void fichasIniciales(Ficha * laFicha, unsigned short int * x, unsigned short int * y, Tamanio tam)
 {
 	*x = rand()%tam;
 	*y = rand()%tam;
-	*laFicha = FICHA_NUEVA();
+	*laFicha = VALOR_FICHA_NUEVA();
 }
 
-Tamanio dameTamanio(unsigned int dif)
+Tamanio dameTamanio(unsigned int dif)				/*	Convierte la dificultad al tamaño correspondiente.*/
 {
 	switch(dif)
 	{
@@ -41,7 +39,7 @@ Tamanio dameTamanio(unsigned int dif)
 	}
 }
 
-unsigned short int dameDificultad(Tamanio tam)
+unsigned short int dameDificultad(Tamanio tam)		/*	Funcion inversa de la anterior.	*/
 {
 	switch(tam)
 	{
@@ -71,7 +69,7 @@ unsigned short int dameVictoria(unsigned short int dif)
 	}
 }
 
-Cod_Error prepararJuegoNuevo(Info * laInfoActual, Info * laInfoRespaldo)			/* Deja el tablero principal con dos fichas y todos ceros. */
+Cod_Error prepararJuegoNuevo(Info * laInfoActual, Info * laInfoRespaldo)	/* Deja el tablero principal con dos fichas y todos ceros. */
 {
 	int result;
 
@@ -93,38 +91,36 @@ Cod_Error prepararJuegoNuevo(Info * laInfoActual, Info * laInfoRespaldo)			/* De
 	}
 	
 	randomizeSeed();
-	/* Ponemos la primera ficha. */
-	fichaAlAzar(&laFicha, &x1, &y1, laInfoActual->tamanio);					
+
+	fichasIniciales(&laFicha, &x1, &y1, laInfoActual->tamanio);				/* Ponemos la primera ficha. */					
 	laInfoActual->tablero[x1][y1] = laFicha;
 	
-	/* Ponemos la segunda ficha. */
 	do
-		fichaAlAzar(&laFicha, &x2, &y2, laInfoActual->tamanio);
+		fichasIniciales(&laFicha, &x2, &y2, laInfoActual->tamanio);			/* Ponemos la segunda ficha. */
 	while(x2 == x1 && y2 == y1);
 
 	laInfoActual->tablero[x2][y2] = laFicha;
 	return result;
 }
 
-Cod_Error cargarJuego(Info * laInfoActual, Info * laInfoRespaldo)
+Cod_Error cargarPartida(Info * laInfoActual, Info * laInfoRespaldo)		
 {
 	FILE * archivoCarga;
 	unsigned short int dif;
-	int i,j;
+	int i;
+
+	
 	randomizeSeed();
 	
-	laInfoActual->undoPosible = FALSE;
 
 	archivoCarga = fopen(laInfoActual->nombreArchivo, "rb");
 	
-	
-
 	fread(&dif, sizeof(dif), 1, archivoCarga);
 	
 	laInfoActual->tamanio = dameTamanio(dif);
 	laInfoRespaldo->tamanio = laInfoActual->tamanio;
 	laInfoActual->undoPosible = FALSE;
-	laInfoActual->undoPosible = FALSE;
+	laInfoRespaldo->undoPosible = FALSE;
 
 	laInfoActual->tablero = crearTablero(laInfoActual->tamanio);
 	if(laInfoActual->tablero == NULL)
@@ -138,16 +134,19 @@ Cod_Error cargarJuego(Info * laInfoActual, Info * laInfoRespaldo)
 	}
 	
 	fread(&(laInfoActual->puntaje), sizeof(Puntaje), 1, archivoCarga);
+
 	fread(&(laInfoActual->undos), sizeof(unsigned short int), 1, archivoCarga);
+
 	for(i = 0; i < laInfoActual->tamanio; i++)
 		fread(laInfoActual->tablero[i], sizeof(Ficha), laInfoActual->tamanio, archivoCarga);
 
 	fclose(archivoCarga);
+	
 	return OK;
 }
 
 
-static Cod_Error inicializarNuevo(Info * laInfo)
+static Cod_Error inicializarNuevo(Info * laInfo)						
 {
 	int i, j;
 	unsigned short int dificultad = dameDificultad(laInfo->tamanio);
@@ -181,7 +180,7 @@ static Cod_Error inicializarNuevo(Info * laInfo)
 	return OK;
 }
 
-static Tablero crearTablero(unsigned short int tamanio)
+static Tablero crearTablero(unsigned short int tamanio)			/*	Reserva el espacio para un Info *. */
 {
 	unsigned short int i;
 	Tablero tablero;
@@ -208,7 +207,7 @@ static Tablero crearTablero(unsigned short int tamanio)
 	return tablero;
 }
 
-static void liberarTablero(Info * laInfo)
+static void liberarTablero(Info * laInfo)					/*	Libera toda la memoria usada por un tablero.	*/
 {
 	unsigned short int i;
 	for (i = 0; i < laInfo->tamanio; i++)
@@ -217,10 +216,10 @@ static void liberarTablero(Info * laInfo)
 	laInfo->tablero = NULL;
 }
 
-Cod_Error actualizarInfo(Info * laInfoActual, Info * laInfoRespaldo, char jugada)
-{
-	if (jugada == UNDO)
-	{
+Cod_Error actualizarInfo(Info * laInfoActual, Info * laInfoRespaldo, char jugada)	/*	Permite hacer undo si la jugada anterior fue un		*/
+{																					/*	movimiento, y pone una ficha. Si la jugada fue un	*/
+	if (jugada == UNDO)																/*  undo, decrementa la cantidad de undos y pone en		*/
+	{																				/*	FALSE la posibilidad de realizar otro.				*/
 		copiarInfo(laInfoActual, laInfoRespaldo);
 		laInfoActual->undos -= 1;
 		laInfoActual->undoPosible = FALSE;
@@ -237,7 +236,7 @@ Cod_Error actualizarInfo(Info * laInfoActual, Info * laInfoRespaldo, char jugada
 	}
 }
 
-static void copiarInfo(Info * infoDestino, const Info * infoFuente)
+static void copiarInfo(Info * infoDestino, const Info * infoFuente)					
 {
 	unsigned short int i, j;
 	infoDestino->puntaje = infoFuente->puntaje;
@@ -246,9 +245,9 @@ static void copiarInfo(Info * infoDestino, const Info * infoFuente)
 			infoDestino->tablero[i][j] = infoFuente->tablero[i][j];
 }
 
-static void mover(Info * laInfo, char jugada)
-{
-	if (jugada == IZQUIERDA || jugada == DERECHA)
+static void mover(Info * laInfo, char jugada)							/*	Se ocupa de todo el movimiento de las piezas.		*/
+{																		/*	Hay dos funciones distintas, pues cada una esta		*/
+	if (jugada == IZQUIERDA || jugada == DERECHA)						/*	optimizada de la mejor manera para cada direccion.	*/
 		moverIzquierdaDerecha(laInfo, jugada);
 	else
 		moverArribaAbajo(laInfo, jugada);
@@ -386,8 +385,8 @@ static void moverArribaAbajo(Info * laInfo, char direccion)
 	}
 }
 
-static Cod_Error ponerFicha(Info * laInfo, char ultimaDireccion)
-{
+static Cod_Error ponerFicha(Info * laInfo, char ultimaDireccion)						/*	Pone una ficha (2 o 4) en alguna posicion libre */
+{																						/*	Luego de haber realizado un movimiento valido.	*/
 	int auxRand;
 	unsigned short int cantLibre;
 	posicionLibre * posiciones;
@@ -400,14 +399,14 @@ static Cod_Error ponerFicha(Info * laInfo, char ultimaDireccion)
 
 	auxRand = rand()%cantLibre;
 	
-	laInfo->tablero[posiciones[auxRand].x][posiciones[auxRand].y] = FICHA_NUEVA();
+	laInfo->tablero[posiciones[auxRand].x][posiciones[auxRand].y] = VALOR_FICHA_NUEVA();
 
 	free(posiciones);
 	return OK;
 }
 
-unsigned short int validarJugadas(Info * laInfo)
-{	/* Falta hacerla */
+unsigned short int validarJugadas(Info * laInfo)										/*	Checkea si una jugada es valida.*/
+{	
 	BOOL arriba_valida = FALSE, abajo_valida = FALSE, izquierda_valida = FALSE, derecha_valida = FALSE;
 	unsigned short int i, j, cantJugadas = 0;
 	for (i = 0; i < laInfo->tamanio && cantJugadas < 4; i++)
@@ -587,7 +586,7 @@ static int recorrerTableroArribaoAbajo(const Info * laInfo, char direccion, posi
 
 void guardaPartida(Info * laInfo)
 {
-	int i,j;
+	int i;
 	unsigned short int dif = dameDificultad(laInfo->tamanio);
 	FILE * archivoGuarda;
 
@@ -601,3 +600,15 @@ void guardaPartida(Info * laInfo)
 
 	fclose(archivoGuarda);
 }
+
+
+/*FILE * validarArchivo()
+{
+
+
+
+
+
+
+}
+*/

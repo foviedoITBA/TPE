@@ -41,7 +41,7 @@ int main(void)
 				hubo_error = prepararJuegoNuevo(&infoActual, &infoRespaldo);
 				break;
 		case CARGAR_JUEGO:
-				hubo_error = cargarJuego(&infoActual, &infoRespaldo);
+				hubo_error = cargarPartida(&infoActual, &infoRespaldo);
 				BORRA_BUFFER();
 				break;
 	}
@@ -171,8 +171,7 @@ Cod_Error jugar(Info * laInfoActual, Info * laInfoRespaldo)
 		jugada = leerJugada(laInfoActual->jugadasValidas, cantJugadas);
 		switch(jugada)
 		{
-			case QUIT:
-				
+			case QUIT:			
 				break;
 			case GUARDAR:
 				laInfoActual->nombreArchivo = menuCargarGuardar(laInfoActual);
@@ -181,11 +180,13 @@ Cod_Error jugar(Info * laInfoActual, Info * laInfoRespaldo)
 				break;
 			default:
 				hubo_error = actualizarInfo(laInfoActual, laInfoRespaldo, jugada);
-				if (hubo_error != OK){printf("Error al poner ficha");}
-				
+				if (hubo_error != OK)
+					printf("Error al poner ficha");				
 		}
 
 	} while(jugada != QUIT);
+
+	return hubo_error;
 }
 
 char leerJugada(const char * jugadasValidas, unsigned short int cantJugadas)
