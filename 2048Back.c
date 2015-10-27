@@ -54,8 +54,8 @@ unsigned short int dameDificultad(Tamanio tam)		/*	Funcion inversa de la anterio
 	}
 }
 
-unsigned short int dameVictoria(unsigned short int dif)
-{
+unsigned short int dameVictoria(unsigned short int dif)		/* Devuelve el valor de la ficha ganadora */
+{																													/* Segun la dificultad elegida.						*/
 	switch(dif)
 	{
 		case DIF_FACIL:
@@ -89,12 +89,12 @@ Cod_Error prepararJuegoNuevo(Info * laInfoActual, Info * laInfoRespaldo)	/* Deja
 		liberarTablero(laInfoActual);
 		return ERROR_MEMORIA;
 	}
-	
+
 	randomizeSeed();
 
-	fichasIniciales(&laFicha, &x1, &y1, laInfoActual->tamanio);				/* Ponemos la primera ficha. */					
+	fichasIniciales(&laFicha, &x1, &y1, laInfoActual->tamanio);				/* Ponemos la primera ficha. */
 	laInfoActual->tablero[x1][y1] = laFicha;
-	
+
 	do
 		fichasIniciales(&laFicha, &x2, &y2, laInfoActual->tamanio);			/* Ponemos la segunda ficha. */
 	while(x2 == x1 && y2 == y1);
@@ -103,20 +103,20 @@ Cod_Error prepararJuegoNuevo(Info * laInfoActual, Info * laInfoRespaldo)	/* Deja
 	return result;
 }
 
-Cod_Error cargarPartida(Info * laInfoActual, Info * laInfoRespaldo)		
+Cod_Error cargarPartida(Info * laInfoActual, Info * laInfoRespaldo)
 {
 	FILE * archivoCarga;
 	unsigned short int dif;
 	int i;
 
-	
+
 	randomizeSeed();
-	
+
 
 	archivoCarga = fopen(laInfoActual->nombreArchivo, "rb");
-	
+
 	fread(&dif, sizeof(dif), 1, archivoCarga);
-	
+
 	laInfoActual->tamanio = dameTamanio(dif);
 	laInfoRespaldo->tamanio = laInfoActual->tamanio;
 	laInfoActual->undoPosible = FALSE;
@@ -125,14 +125,14 @@ Cod_Error cargarPartida(Info * laInfoActual, Info * laInfoRespaldo)
 	laInfoActual->tablero = crearTablero(laInfoActual->tamanio);
 	if(laInfoActual->tablero == NULL)
 		return ERROR_MEMORIA;
-	
+
 	laInfoRespaldo->tablero = crearTablero(laInfoRespaldo->tamanio);
 	if(laInfoRespaldo->tablero == NULL)
 	{
 		liberarTablero(laInfoActual);
 		return ERROR_MEMORIA;
 	}
-	
+
 	fread(&(laInfoActual->puntaje), sizeof(Puntaje), 1, archivoCarga);
 
 	fread(&(laInfoActual->undos), sizeof(unsigned short int), 1, archivoCarga);
@@ -141,12 +141,12 @@ Cod_Error cargarPartida(Info * laInfoActual, Info * laInfoRespaldo)
 		fread(laInfoActual->tablero[i], sizeof(Ficha), laInfoActual->tamanio, archivoCarga);
 
 	fclose(archivoCarga);
-	
+
 	return OK;
 }
 
 
-static Cod_Error inicializarNuevo(Info * laInfo)						
+static Cod_Error inicializarNuevo(Info * laInfo)
 {
 	int i, j;
 	unsigned short int dificultad = dameDificultad(laInfo->tamanio);
@@ -168,7 +168,7 @@ static Cod_Error inicializarNuevo(Info * laInfo)
 	laInfo->tablero = crearTablero(laInfo->tamanio);
 	if (laInfo->tablero == NULL)
 		return ERROR_MEMORIA;
-	
+
 	for (i = 0; i < laInfo->tamanio; i++)
 		for (j = 0; j < laInfo->tamanio; j++)
 			laInfo->tablero[i][j] = 0;
@@ -184,16 +184,16 @@ static Tablero crearTablero(unsigned short int tamanio)			/*	Reserva el espacio 
 {
 	unsigned short int i;
 	Tablero tablero;
-	
+
 	tablero = malloc(tamanio * sizeof(tablero[0]));
 
 	if (tablero == NULL)
 		return NULL;
-	
+
 	for (i = 0; i < tamanio; i++)
 	{
 		tablero[i] = malloc(tamanio * sizeof(tablero[0][0]));
-		
+
 		if (tablero[i] == NULL)
 		{
 			for (; i >= 0; i--)
@@ -236,7 +236,7 @@ Cod_Error actualizarInfo(Info * laInfoActual, Info * laInfoRespaldo, char jugada
 	}
 }
 
-static void copiarInfo(Info * infoDestino, const Info * infoFuente)					
+static void copiarInfo(Info * infoDestino, const Info * infoFuente)
 {
 	unsigned short int i, j;
 	infoDestino->puntaje = infoFuente->puntaje;
@@ -254,7 +254,7 @@ static void mover(Info * laInfo, char jugada)							/*	Se ocupa de todo el movim
 }
 
 static void moverIzquierdaDerecha(Info * laInfo, char direccion)
-{	
+{
 	int incJ, incK;
 	Estado estado;
 	int index, i, j;
@@ -302,6 +302,7 @@ static void moverIzquierdaDerecha(Info * laInfo, char direccion)
 							laInfo->ganaste = TRUE;
 						laInfo->tablero[i][j] = 0;
 						laInfo->tablero[i][index] = 2*ficha;
+
 						estado = NADA;
 					}
 					else if (laInfo->tablero[i][j] != 0)
@@ -398,7 +399,7 @@ static Cod_Error ponerFicha(Info * laInfo, char ultimaDireccion)						/*	Pone un
 	cantLibre=recorrerTablero(laInfo, ultimaDireccion, posiciones);
 
 	auxRand = rand()%cantLibre;
-	
+
 	laInfo->tablero[posiciones[auxRand].x][posiciones[auxRand].y] = VALOR_FICHA_NUEVA();
 
 	free(posiciones);
@@ -406,7 +407,7 @@ static Cod_Error ponerFicha(Info * laInfo, char ultimaDireccion)						/*	Pone un
 }
 
 unsigned short int validarJugadas(Info * laInfo)										/*	Checkea si una jugada es valida.*/
-{	
+{
 	BOOL arriba_valida = FALSE, abajo_valida = FALSE, izquierda_valida = FALSE, derecha_valida = FALSE;
 	unsigned short int i, j, cantJugadas = 0;
 	for (i = 0; i < laInfo->tamanio && cantJugadas < 4; i++)
@@ -494,7 +495,7 @@ static int recorrerTablero(const Info * laInfo, char direccion, posicionLibre * 
 	if (direccion == ARRIBA || direccion == ABAJO)												/* recorrerTableroArribaoAbajo,	pues	*/
 		return recorrerTableroArribaoAbajo(laInfo, direccion, posiciones);						/* de esta manera se puede optimizar	*/
 	if (direccion == IZQUIERDA || direccion == DERECHA)											/* la busqueda de posiciones vacias,	*/
-		return recorrerTableroIzquierdaoDerecha(laInfo, direccion, posiciones);					/* cambiando el sentido de recorrido:	*/				
+		return recorrerTableroIzquierdaoDerecha(laInfo, direccion, posiciones);					/* cambiando el sentido de recorrido:	*/
 }																								/* En un caso por filas y luego columnas*/
 																								/* Y en el otro, al revez. */
 
@@ -579,7 +580,7 @@ static int recorrerTableroArribaoAbajo(const Info * laInfo, char direccion, posi
 			}
 		}
 	}
-	
+
 	return cant;
 }
 
@@ -591,9 +592,9 @@ void guardaPartida(Info * laInfo)
 	FILE * archivoGuarda;
 
 	archivoGuarda = fopen(laInfo->nombreArchivo, "wb");
-	
+
 	fwrite(&dif, sizeof(unsigned short int), 1, archivoGuarda);
-	fwrite(&(laInfo->puntaje), sizeof(Puntaje), 1, archivoGuarda);	
+	fwrite(&(laInfo->puntaje), sizeof(Puntaje), 1, archivoGuarda);
 	fwrite(&(laInfo->undos), sizeof(unsigned short int), 1, archivoGuarda);
 	for(i = 0; i < laInfo->tamanio ; i++)
 		fwrite(laInfo->tablero[i], sizeof(laInfo->tablero[0][0]), laInfo->tamanio, archivoGuarda);
