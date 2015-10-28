@@ -170,8 +170,8 @@ char * leerNombreArchivo()
 Cod_Error jugar(Info * laInfoActual, Info * laInfoRespaldo)
 {
 	unsigned short int cantJugadas;
-	char opcionGanar[7];
-	char jugada, saleprog=0;
+	/*char opcionGanar[7];*/
+	char jugada, saleprog=FALSE;
 	char c;
 	Cod_Error hubo_error;
 
@@ -190,7 +190,7 @@ Cod_Error jugar(Info * laInfoActual, Info * laInfoRespaldo)
 		{
 			imprimirOpciones();
 			jugada = leerJugada(laInfoActual->jugadasValidas, cantJugadas);
-			switch(jugada)
+			switch(jugada)												/*hay que cambiar el switch porque cada case dependian de que jugada fuera un char,pero ahora ya no lo es*/
 			{
 				case SALIR:
 					do
@@ -200,12 +200,14 @@ Cod_Error jugar(Info * laInfoActual, Info * laInfoRespaldo)
 							jugada=GUARDAR;								/*DESP:Buscar otra posible forma de hacerlo*/
 						BORRA_BUFFER();
 					} while(c != 'N' && c != 'Y');
-					saleprog=jugada;
+					saleprog=TRUE;
 					break;
 				case GUARDAR:
 					laInfoActual->nombreArchivo = menuCargarGuardar(laInfoActual);
 					guardaPartida(laInfoActual);
 					BORRA_BUFFER();
+					if (saleprog==TRUE)
+						jugada=SALIR
 					break;
 				default:
 					hubo_error = actualizarInfo(laInfoActual, laInfoRespaldo, jugada);
@@ -213,7 +215,7 @@ Cod_Error jugar(Info * laInfoActual, Info * laInfoRespaldo)
 						printf("Error al poner ficha");
 		}
 
-	} while(jugada != saleprog);
+	} while(jugada != SALIR);
 	}
 	/*else
 		{
@@ -236,7 +238,7 @@ char leerJugada(const char * jugadasValidas, unsigned short int cantJugadas)
 		unsigned short int i;
 		c = getchar();
 		BORRA_BUFFER();
-		if (c == QUIT || c == SAVE)
+		if (c == QUIT || c == SAVE)				/*USA QUIT Y SAVE (CHEQUEAR)*/	
 			valida = TRUE;
 		else
 			for (i = 0; i < cantJugadas && !valida; i++)

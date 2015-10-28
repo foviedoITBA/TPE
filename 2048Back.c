@@ -218,7 +218,7 @@ static void liberarTablero(Info * laInfo)					/*	Libera toda la memoria usada po
 
 Cod_Error actualizarInfo(Info * laInfoActual, Info * laInfoRespaldo, char jugada)	/*	Permite hacer undo si la jugada anterior fue un		*/
 {																					/*	movimiento, y pone una ficha. Si la jugada fue un	*/
-	if (jugada == UNDO)																/*  undo, decrementa la cantidad de undos y pone en		*/
+	if (jugada == UNDO)			/*USA UNDO (CHEQUEAR)*/								/*  undo, decrementa la cantidad de undos y pone en		*/
 	{																				/*	FALSE la posibilidad de realizar otro.				*/
 		copiarInfo(laInfoActual, laInfoRespaldo);
 		laInfoActual->undos -= 1;
@@ -432,7 +432,7 @@ unsigned short int validarJugadas(Info * laInfo)										/*	Checkea si una juga
 	if (derecha_valida == TRUE)
 		laInfo->jugadasValidas[cantJugadas++] = DERECHA;
 
-	if (laInfo->undoPosible == TRUE && laInfo->undos > 0)
+	if (laInfo->undoPosible == TRUE && laInfo->undos > 0)				/* USA UNDOS (CHEQUEAR)*/	
 		laInfo->jugadasValidas[cantJugadas++] = UNDO;
 
 	return cantJugadas;
