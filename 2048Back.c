@@ -1,10 +1,12 @@
 #include "2048Back.h"
+#include <stdio.h> 			/* BORRAR DESPUES */
 
 static Cod_Error inicializarNuevo(Info *);
 static Tablero crearTablero(unsigned short int);
 static void liberarTablero(Info*);
-static void fichasIniciales(Ficha*, unsigned short int*, unsigned short int*, Tamanio);
+static void fichaAlAzar(Ficha*, unsigned short int*, unsigned short int*, Tamanio);
 static void copiarInfo(Info*, const Info*);
+static void mover(Info*, char);
 static Cod_Error ponerFicha(Info *, char);
 static int recorrerTablero(const Info *, char, posicionLibre *);
 static int recorrerTableroIzquierdaoDerecha(const Info *, char, posicionLibre *);
@@ -17,14 +19,14 @@ static BOOL validarAbajo(const Info*, unsigned short int, unsigned short int);
 static BOOL validarIzquierda(const Info*, unsigned short int, unsigned short int);
 static BOOL validarDerecha(const Info*, unsigned short int, unsigned short int);
 
-static void fichasIniciales(Ficha * laFicha, unsigned short int * x, unsigned short int * y, Tamanio tam)
+static void fichaAlAzar(Ficha * laFicha, unsigned short int * x, unsigned short int * y, Tamanio tam)
 {
 	*x = rand()%tam;
 	*y = rand()%tam;
-	*laFicha = VALOR_FICHA_NUEVA();
+	*laFicha = FICHA_NUEVA();
 }
 
-Tamanio dameTamanio(unsigned int dif)				/*	Convierte la dificultad al tamaño correspondiente.*/
+Tamanio dameTamanio(unsigned int dif)
 {
 	switch(dif)
 	{
@@ -39,7 +41,7 @@ Tamanio dameTamanio(unsigned int dif)				/*	Convierte la dificultad al tamaño c
 	}
 }
 
-unsigned short int dameDificultad(Tamanio tam)		/*	Funcion inversa de la anterior.	*/
+unsigned short int dameDificultad(Tamanio tam)
 {
 	switch(tam)
 	{
@@ -54,8 +56,8 @@ unsigned short int dameDificultad(Tamanio tam)		/*	Funcion inversa de la anterio
 	}
 }
 
-unsigned short int dameVictoria(unsigned short int dif)		/* Devuelve el valor de la ficha ganadora */
-{																													/* Segun la dificultad elegida.						*/
+unsigned short int dameVictoria(unsigned short int dif)
+{
 	switch(dif)
 	{
 		case DIF_FACIL:
@@ -69,7 +71,7 @@ unsigned short int dameVictoria(unsigned short int dif)		/* Devuelve el valor de
 	}
 }
 
-Cod_Error prepararJuegoNuevo(Info * laInfoActual, Info * laInfoRespaldo)	/* Deja el tablero principal con dos fichas y todos ceros. */
+Cod_Error prepararJuegoNuevo(Info * laInfoActual, Info * laInfoRespaldo)			/* Deja el tablero principal con dos fichas y todos ceros. */
 {
 	int result;
 
@@ -89,59 +91,58 @@ Cod_Error prepararJuegoNuevo(Info * laInfoActual, Info * laInfoRespaldo)	/* Deja
 		liberarTablero(laInfoActual);
 		return ERROR_MEMORIA;
 	}
-
+	
 	randomizeSeed();
-
-	fichasIniciales(&laFicha, &x1, &y1, laInfoActual->tamanio);				/* Ponemos la primera ficha. */
+	/* Ponemos la primera ficha. */
+	fichaAlAzar(&laFicha, &x1, &y1, laInfoActual->tamanio);					
 	laInfoActual->tablero[x1][y1] = laFicha;
-
+	
+	/* Ponemos la segunda ficha. */
 	do
-		fichasIniciales(&laFicha, &x2, &y2, laInfoActual->tamanio);			/* Ponemos la segunda ficha. */
+		fichaAlAzar(&laFicha, &x2, &y2, laInfoActual->tamanio);
 	while(x2 == x1 && y2 == y1);
 
 	laInfoActual->tablero[x2][y2] = laFicha;
 	return result;
 }
 
-Cod_Error cargarPartida(Info * laInfoActual, Info * laInfoRespaldo)
+Cod_Error cargarJuego(Info * laInfoActual, Info * laInfoRespaldo)
 {
 	FILE * archivoCarga;
 	unsigned short int dif;
-	int i;
-
-
+	int i,j;
 	randomizeSeed();
-
+	
+	laInfoActual->undoPosible = FALSE;
 
 	archivoCarga = fopen(laInfoActual->nombreArchivo, "rb");
+	
+	
 
 	fread(&dif, sizeof(dif), 1, archivoCarga);
-
+	
 	laInfoActual->tamanio = dameTamanio(dif);
 	laInfoRespaldo->tamanio = laInfoActual->tamanio;
 	laInfoActual->undoPosible = FALSE;
-	laInfoRespaldo->undoPosible = FALSE;
+	laInfoActual->undoPosible = FALSE;
 
 	laInfoActual->tablero = crearTablero(laInfoActual->tamanio);
 	if(laInfoActual->tablero == NULL)
 		return ERROR_MEMORIA;
-
+	
 	laInfoRespaldo->tablero = crearTablero(laInfoRespaldo->tamanio);
 	if(laInfoRespaldo->tablero == NULL)
 	{
 		liberarTablero(laInfoActual);
 		return ERROR_MEMORIA;
 	}
-
+	
 	fread(&(laInfoActual->puntaje), sizeof(Puntaje), 1, archivoCarga);
-
 	fread(&(laInfoActual->undos), sizeof(unsigned short int), 1, archivoCarga);
-
 	for(i = 0; i < laInfoActual->tamanio; i++)
 		fread(laInfoActual->tablero[i], sizeof(Ficha), laInfoActual->tamanio, archivoCarga);
 
 	fclose(archivoCarga);
-
 	return OK;
 }
 
@@ -168,7 +169,7 @@ static Cod_Error inicializarNuevo(Info * laInfo)
 	laInfo->tablero = crearTablero(laInfo->tamanio);
 	if (laInfo->tablero == NULL)
 		return ERROR_MEMORIA;
-
+	
 	for (i = 0; i < laInfo->tamanio; i++)
 		for (j = 0; j < laInfo->tamanio; j++)
 			laInfo->tablero[i][j] = 0;
@@ -180,20 +181,20 @@ static Cod_Error inicializarNuevo(Info * laInfo)
 	return OK;
 }
 
-static Tablero crearTablero(unsigned short int tamanio)			/*	Reserva el espacio para un Info *. */
+static Tablero crearTablero(unsigned short int tamanio)
 {
 	unsigned short int i;
 	Tablero tablero;
-
+	
 	tablero = malloc(tamanio * sizeof(tablero[0]));
 
 	if (tablero == NULL)
 		return NULL;
-
+	
 	for (i = 0; i < tamanio; i++)
 	{
 		tablero[i] = malloc(tamanio * sizeof(tablero[0][0]));
-
+		
 		if (tablero[i] == NULL)
 		{
 			for (; i >= 0; i--)
@@ -207,7 +208,7 @@ static Tablero crearTablero(unsigned short int tamanio)			/*	Reserva el espacio 
 	return tablero;
 }
 
-static void liberarTablero(Info * laInfo)					/*	Libera toda la memoria usada por un tablero.	*/
+static void liberarTablero(Info * laInfo)
 {
 	unsigned short int i;
 	for (i = 0; i < laInfo->tamanio; i++)
@@ -216,10 +217,10 @@ static void liberarTablero(Info * laInfo)					/*	Libera toda la memoria usada po
 	laInfo->tablero = NULL;
 }
 
-Cod_Error actualizarInfo(Info * laInfoActual, Info * laInfoRespaldo, char jugada)	/*	Permite hacer undo si la jugada anterior fue un		*/
-{																					/*	movimiento, y pone una ficha. Si la jugada fue un	*/
-	if (jugada == UNDO)			/*USA UNDO (CHEQUEAR)*/								/*  undo, decrementa la cantidad de undos y pone en		*/
-	{																				/*	FALSE la posibilidad de realizar otro.				*/
+Cod_Error actualizarInfo(Info * laInfoActual, Info * laInfoRespaldo, char jugada)
+{
+	if (jugada == UNDO)
+	{
 		copiarInfo(laInfoActual, laInfoRespaldo);
 		laInfoActual->undos -= 1;
 		laInfoActual->undoPosible = FALSE;
@@ -245,16 +246,16 @@ static void copiarInfo(Info * infoDestino, const Info * infoFuente)
 			infoDestino->tablero[i][j] = infoFuente->tablero[i][j];
 }
 
-static void mover(Info * laInfo, char jugada)							/*	Se ocupa de todo el movimiento de las piezas.		*/
-{																		/*	Hay dos funciones distintas, pues cada una esta		*/
-	if (jugada == IZQUIERDA || jugada == DERECHA)						/*	optimizada de la mejor manera para cada direccion.	*/
+static void mover(Info * laInfo, char jugada)
+{
+	if (jugada == IZQUIERDA || jugada == DERECHA)
 		moverIzquierdaDerecha(laInfo, jugada);
 	else
 		moverArribaAbajo(laInfo, jugada);
 }
 
 static void moverIzquierdaDerecha(Info * laInfo, char direccion)
-{
+{	
 	int incJ, incK;
 	Estado estado;
 	int index, i, j;
@@ -302,7 +303,6 @@ static void moverIzquierdaDerecha(Info * laInfo, char direccion)
 							laInfo->ganaste = TRUE;
 						laInfo->tablero[i][j] = 0;
 						laInfo->tablero[i][index] = 2*ficha;
-
 						estado = NADA;
 					}
 					else if (laInfo->tablero[i][j] != 0)
@@ -386,8 +386,8 @@ static void moverArribaAbajo(Info * laInfo, char direccion)
 	}
 }
 
-static Cod_Error ponerFicha(Info * laInfo, char ultimaDireccion)						/*	Pone una ficha (2 o 4) en alguna posicion libre */
-{																						/*	Luego de haber realizado un movimiento valido.	*/
+static Cod_Error ponerFicha(Info * laInfo, char ultimaDireccion)
+{
 	int auxRand;
 	unsigned short int cantLibre;
 	posicionLibre * posiciones;
@@ -399,15 +399,15 @@ static Cod_Error ponerFicha(Info * laInfo, char ultimaDireccion)						/*	Pone un
 	cantLibre=recorrerTablero(laInfo, ultimaDireccion, posiciones);
 
 	auxRand = rand()%cantLibre;
-
-	laInfo->tablero[posiciones[auxRand].x][posiciones[auxRand].y] = VALOR_FICHA_NUEVA();
+	
+	laInfo->tablero[posiciones[auxRand].x][posiciones[auxRand].y] = FICHA_NUEVA();
 
 	free(posiciones);
 	return OK;
 }
 
-unsigned short int validarJugadas(Info * laInfo)										/*	Checkea si una jugada es valida.*/
-{
+unsigned short int validarJugadas(Info * laInfo)
+{	/* Falta hacerla */
 	BOOL arriba_valida = FALSE, abajo_valida = FALSE, izquierda_valida = FALSE, derecha_valida = FALSE;
 	unsigned short int i, j, cantJugadas = 0;
 	for (i = 0; i < laInfo->tamanio && cantJugadas < 4; i++)
@@ -432,7 +432,7 @@ unsigned short int validarJugadas(Info * laInfo)										/*	Checkea si una juga
 	if (derecha_valida == TRUE)
 		laInfo->jugadasValidas[cantJugadas++] = DERECHA;
 
-	if (laInfo->undoPosible == TRUE && laInfo->undos > 0)				/* USA UNDOS (CHEQUEAR)*/	
+	if (laInfo->undoPosible == TRUE && laInfo->undos > 0)
 		laInfo->jugadasValidas[cantJugadas++] = UNDO;
 
 	return cantJugadas;
@@ -495,7 +495,7 @@ static int recorrerTablero(const Info * laInfo, char direccion, posicionLibre * 
 	if (direccion == ARRIBA || direccion == ABAJO)												/* recorrerTableroArribaoAbajo,	pues	*/
 		return recorrerTableroArribaoAbajo(laInfo, direccion, posiciones);						/* de esta manera se puede optimizar	*/
 	if (direccion == IZQUIERDA || direccion == DERECHA)											/* la busqueda de posiciones vacias,	*/
-		return recorrerTableroIzquierdaoDerecha(laInfo, direccion, posiciones);					/* cambiando el sentido de recorrido:	*/
+		return recorrerTableroIzquierdaoDerecha(laInfo, direccion, posiciones);					/* cambiando el sentido de recorrido:	*/				
 }																								/* En un caso por filas y luego columnas*/
 																								/* Y en el otro, al revez. */
 
@@ -580,36 +580,24 @@ static int recorrerTableroArribaoAbajo(const Info * laInfo, char direccion, posi
 			}
 		}
 	}
-
+	
 	return cant;
 }
 
 
 void guardaPartida(Info * laInfo)
 {
-	int i;
+	int i,j;
 	unsigned short int dif = dameDificultad(laInfo->tamanio);
 	FILE * archivoGuarda;
 
 	archivoGuarda = fopen(laInfo->nombreArchivo, "wb");
-
+	
 	fwrite(&dif, sizeof(unsigned short int), 1, archivoGuarda);
-	fwrite(&(laInfo->puntaje), sizeof(Puntaje), 1, archivoGuarda);
+	fwrite(&(laInfo->puntaje), sizeof(Puntaje), 1, archivoGuarda);	
 	fwrite(&(laInfo->undos), sizeof(unsigned short int), 1, archivoGuarda);
 	for(i = 0; i < laInfo->tamanio ; i++)
 		fwrite(laInfo->tablero[i], sizeof(laInfo->tablero[0][0]), laInfo->tamanio, archivoGuarda);
 
 	fclose(archivoGuarda);
 }
-
-
-/*FILE * validarArchivo()
-{
-
-
-
-
-
-
-}
-*/
