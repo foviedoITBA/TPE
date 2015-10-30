@@ -3,6 +3,7 @@
 
 #include <stdlib.h>
 #include <time.h>
+#include <stdio.h> 
 
 #define FICHA_NUEVA()	((rand() / (double) RAND_MAX) <= 0.89 ? 2 : 4)
 #define randomizeSeed()	srand(time(0))
@@ -69,6 +70,7 @@ Cod_Error cargarJuego(Info *, Info *);
 Cod_Error actualizarInfo(Info*,Info*, char);
 unsigned short int validarJugadas(Info*);
 unsigned short int dameVictoria(unsigned short int);
+unsigned short int dameUndos(unsigned short int dif);
 void guardaPartida(Info * laInfo);
 
 #endif

@@ -1,12 +1,10 @@
 #include "2048Back.h"
-#include <stdio.h> 			/* BORRAR DESPUES */
 
 static Cod_Error inicializarNuevo(Info *);
 static Tablero crearTablero(unsigned short int);
 static void liberarTablero(Info*);
 static void fichaAlAzar(Ficha*, unsigned short int*, unsigned short int*, Tamanio);
 static void copiarInfo(Info*, const Info*);
-static void mover(Info*, char);
 static Cod_Error ponerFicha(Info *, char);
 static int recorrerTablero(const Info *, char, posicionLibre *);
 static int recorrerTableroIzquierdaoDerecha(const Info *, char, posicionLibre *);
@@ -71,6 +69,20 @@ unsigned short int dameVictoria(unsigned short int dif)
 	}
 }
 
+unsigned short int dameUndos(unsigned short int dif)
+{
+	switch(dif)
+	{
+		case DIF_FACIL:
+			return UNDOS_FACIL;
+		case DIF_MEDIO:
+			return UNDOS_MEDIO;
+		case DIF_DIFICIL:
+			return UNDOS_DIFICIL;
+		default:
+			return 0;
+	}
+}
 Cod_Error prepararJuegoNuevo(Info * laInfoActual, Info * laInfoRespaldo)			/* Deja el tablero principal con dos fichas y todos ceros. */
 {
 	int result;
@@ -111,16 +123,24 @@ Cod_Error cargarJuego(Info * laInfoActual, Info * laInfoRespaldo)
 	FILE * archivoCarga;
 	unsigned short int dif;
 	int i,j;
+	int auxVictoria;
 	randomizeSeed();
 	
 	laInfoActual->undoPosible = FALSE;
 
-	archivoCarga = fopen(laInfoActual->nombreArchivo, "rb");
-	
-	
+	if( (archivoCarga = fopen(laInfoActual->nombreArchivo, "rb")) == NULL )
+	{
+		return ERROR_ARCHIVO;
+	}
 
 	fread(&dif, sizeof(dif), 1, archivoCarga);
 	
+	if(dif < 0 || dif > 3)
+	{
+		fclose(archivoCarga);
+		return ERROR_ARCHIVO;
+	}
+
 	laInfoActual->tamanio = dameTamanio(dif);
 	laInfoRespaldo->tamanio = laInfoActual->tamanio;
 	laInfoActual->undoPosible = FALSE;
@@ -139,8 +159,24 @@ Cod_Error cargarJuego(Info * laInfoActual, Info * laInfoRespaldo)
 	
 	fread(&(laInfoActual->puntaje), sizeof(Puntaje), 1, archivoCarga);
 	fread(&(laInfoActual->undos), sizeof(unsigned short int), 1, archivoCarga);
+	if(laInfoActual->undos > dameUndos(dif))
+	{
+		fclose(archivoCarga);
+		return ERROR_ARCHIVO;
+	}
+
+	auxVictoria = dameVictoria(dif);
+
 	for(i = 0; i < laInfoActual->tamanio; i++)
+	{
 		fread(laInfoActual->tablero[i], sizeof(Ficha), laInfoActual->tamanio, archivoCarga);
+		for(j = 0; j < laInfoActual->tamanio; j++)
+			if(laInfoActual->tablero[i][j] > auxVictoria)
+				return ERROR_ARCHIVO;
+	}
+
+	if(fgetc(archivoCarga) != EOF) 
+		return ERROR_ARCHIVO;
 
 	fclose(archivoCarga);
 	return OK;
@@ -407,7 +443,7 @@ static Cod_Error ponerFicha(Info * laInfo, char ultimaDireccion)
 }
 
 unsigned short int validarJugadas(Info * laInfo)
-{	/* Falta hacerla */
+{	
 	BOOL arriba_valida = FALSE, abajo_valida = FALSE, izquierda_valida = FALSE, derecha_valida = FALSE;
 	unsigned short int i, j, cantJugadas = 0;
 	for (i = 0; i < laInfo->tamanio && cantJugadas < 4; i++)
