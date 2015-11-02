@@ -16,7 +16,6 @@ void menuDificultad(Info*);
 char * menuCargarGuardar();
 char * leerNombreArchivo();
 Cod_Error jugar(Info*, Info*);
-unsigned short int validarJugadas(Info*);
 char leerJugada(Info *, unsigned short int);
 void imprimirTablero(const Info *);
 void imprimirOpciones();

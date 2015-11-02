@@ -5,9 +5,6 @@
 #include <time.h>
 #include <stdio.h> 
 
-#define FICHA_NUEVA()	((rand() / (double) RAND_MAX) <= 0.89 ? 2 : 4)
-#define randomizeSeed()	srand(time(0))
-
 #define UNDOS_FACIL 8
 #define UNDOS_MEDIO 4
 #define UNDOS_DIFICIL 2
@@ -29,7 +26,6 @@
 #define UNDO	 	'u'
 #define GUARDAR	 	'g'
 #define QUIT 		'q'
-
 
 #define MAX_JUGADAS 5 /*4 direcciones y undo*/
 
@@ -64,14 +60,11 @@ typedef struct
 	BOOL ganaste;
 } Info;
 
-unsigned short int dameTamanio(unsigned int);
+Tamanio dameTamanio(unsigned int);
 Cod_Error prepararJuegoNuevo(Info*, Info*);
 Cod_Error cargarJuego(Info *, Info *);
-Cod_Error actualizarInfo(Info*,Info*, char);
 unsigned short int validarJugadas(Info*);
-unsigned short int dameVictoria(unsigned short int);
-unsigned short int dameUndos(unsigned short int dif);
-void guardaPartida(Info * laInfo);
+Cod_Error actualizarInfo(Info*, Info*, char);
+void guardaPartida(Info*);
 
 #endif
-

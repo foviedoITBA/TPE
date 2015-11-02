@@ -1,28 +1,27 @@
 #include "2048Back.h"
 
+#define FICHA_NUEVA()	((rand() / (double) RAND_MAX) <= 0.89 ? 2 : 4)
+#define randomizeSeed()	srand(time(0))
+
+static unsigned short int dameVictoria(unsigned short int);
+static unsigned short int dameDificultad(Tamanio);
+static unsigned short int dameUndos(unsigned short int);
 static Cod_Error inicializarNuevo(Info *);
 static Tablero crearTablero(unsigned short int);
 static void liberarTablero(Info*);
 static void fichaAlAzar(Ficha*, unsigned short int*, unsigned short int*, Tamanio);
 static void copiarInfo(Info*, const Info*);
-static Cod_Error ponerFicha(Info *, char);
-static int recorrerTablero(const Info *, char, posicionLibre *);
-static int recorrerTableroIzquierdaoDerecha(const Info *, char, posicionLibre *);
-static int recorrerTableroArribaoAbajo(const Info *, char, posicionLibre *);
 static void mover(Info*,char);
 static void moverIzquierdaDerecha(Info*,char);
 static void moverArribaAbajo(Info*,char);
+static Cod_Error ponerFicha(Info *, char);
 static BOOL validarArriba(const Info*, unsigned short int, unsigned short int);
 static BOOL validarAbajo(const Info*, unsigned short int, unsigned short int);
 static BOOL validarIzquierda(const Info*, unsigned short int, unsigned short int);
 static BOOL validarDerecha(const Info*, unsigned short int, unsigned short int);
-
-static void fichaAlAzar(Ficha * laFicha, unsigned short int * x, unsigned short int * y, Tamanio tam)
-{
-	*x = rand()%tam;
-	*y = rand()%tam;
-	*laFicha = FICHA_NUEVA();
-}
+static int recorrerTablero(const Info *, char, posicionLibre *);
+static int recorrerTableroIzquierdaoDerecha(const Info *, char, posicionLibre *);
+static int recorrerTableroArribaoAbajo(const Info *, char, posicionLibre *);
 
 Tamanio dameTamanio(unsigned int dif)
 {
@@ -39,50 +38,6 @@ Tamanio dameTamanio(unsigned int dif)
 	}
 }
 
-unsigned short int dameDificultad(Tamanio tam)
-{
-	switch(tam)
-	{
-		case TAMANIO_FACIL:
-			return DIF_FACIL;
-		case TAMANIO_MEDIO:
-			return DIF_MEDIO;
-		case TAMANIO_DIFICIL:
-			return DIF_DIFICIL;
-		default:
-			return 0;
-	}
-}
-
-unsigned short int dameVictoria(unsigned short int dif)
-{
-	switch(dif)
-	{
-		case DIF_FACIL:
-			return VICTORIA_FACIL;
-		case DIF_MEDIO:
-			return VICTORIA_MEDIO;
-		case DIF_DIFICIL:
-			return VICTORIA_DIFICIL;
-		default:
-			return 0;
-	}
-}
-
-unsigned short int dameUndos(unsigned short int dif)
-{
-	switch(dif)
-	{
-		case DIF_FACIL:
-			return UNDOS_FACIL;
-		case DIF_MEDIO:
-			return UNDOS_MEDIO;
-		case DIF_DIFICIL:
-			return UNDOS_DIFICIL;
-		default:
-			return 0;
-	}
-}
 Cod_Error prepararJuegoNuevo(Info * laInfoActual, Info * laInfoRespaldo)			/* Deja el tablero principal con dos fichas y todos ceros. */
 {
 	int result;
@@ -182,6 +137,126 @@ Cod_Error cargarJuego(Info * laInfoActual, Info * laInfoRespaldo)
 	return OK;
 }
 
+unsigned short int validarJugadas(Info * laInfo)
+{	
+	BOOL arriba_valida = FALSE, abajo_valida = FALSE, izquierda_valida = FALSE, derecha_valida = FALSE;
+	unsigned short int i, j, cantJugadas = 0;
+	for (i = 0; i < laInfo->tamanio && cantJugadas < 4; i++)
+		for (j = 0; j < laInfo->tamanio && cantJugadas < 4; j++)
+		{
+			if (arriba_valida == FALSE)
+				arriba_valida = validarArriba(laInfo, i, j);
+			if (abajo_valida == FALSE)
+				abajo_valida = validarAbajo(laInfo, i, j);
+			if (izquierda_valida == FALSE)
+				izquierda_valida = validarIzquierda(laInfo, i, j);
+			if (derecha_valida == FALSE)
+				derecha_valida = validarDerecha(laInfo, i, j);
+		}
+
+	if (arriba_valida == TRUE)
+		laInfo->jugadasValidas[cantJugadas++] = ARRIBA;
+	if (abajo_valida == TRUE)
+		laInfo->jugadasValidas[cantJugadas++] = ABAJO;
+	if (izquierda_valida == TRUE)
+		laInfo->jugadasValidas[cantJugadas++] = IZQUIERDA;
+	if (derecha_valida == TRUE)
+		laInfo->jugadasValidas[cantJugadas++] = DERECHA;
+
+	if (laInfo->undoPosible == TRUE && laInfo->undos > 0)
+		laInfo->jugadasValidas[cantJugadas++] = UNDO;
+
+	return cantJugadas;
+}
+
+Cod_Error actualizarInfo(Info * laInfoActual, Info * laInfoRespaldo, char jugada)
+{
+	if (jugada == UNDO)
+	{
+		copiarInfo(laInfoActual, laInfoRespaldo);
+		laInfoActual->undos -= 1;
+		laInfoActual->undoPosible = FALSE;
+		return OK;
+	}
+	else
+	{
+		Cod_Error hubo_error;
+		copiarInfo(laInfoRespaldo, laInfoActual);
+		mover(laInfoActual, jugada);
+		hubo_error = ponerFicha(laInfoActual, jugada);
+		laInfoActual->undoPosible = TRUE;
+		return hubo_error;
+	}
+}
+
+void guardaPartida(Info * laInfo)
+{
+	int i,j;
+	unsigned short int dif = dameDificultad(laInfo->tamanio);
+	FILE * archivoGuarda;
+
+	archivoGuarda = fopen(laInfo->nombreArchivo, "wb");
+	
+	fwrite(&dif, sizeof(unsigned short int), 1, archivoGuarda);
+	fwrite(&(laInfo->puntaje), sizeof(Puntaje), 1, archivoGuarda);	
+	fwrite(&(laInfo->undos), sizeof(unsigned short int), 1, archivoGuarda);
+	for(i = 0; i < laInfo->tamanio ; i++)
+		fwrite(laInfo->tablero[i], sizeof(laInfo->tablero[0][0]), laInfo->tamanio, archivoGuarda);
+
+	fclose(archivoGuarda);
+}
+
+static void fichaAlAzar(Ficha * laFicha, unsigned short int * x, unsigned short int * y, Tamanio tam)
+{
+	*x = rand()%tam;
+	*y = rand()%tam;
+	*laFicha = FICHA_NUEVA();
+}
+
+static unsigned short int dameVictoria(unsigned short int dif)
+{
+	switch(dif)
+	{
+		case DIF_FACIL:
+			return VICTORIA_FACIL;
+		case DIF_MEDIO:
+			return VICTORIA_MEDIO;
+		case DIF_DIFICIL:
+			return VICTORIA_DIFICIL;
+		default:
+			return 0;
+	}
+}
+
+static unsigned short int dameDificultad(Tamanio tam)
+{
+	switch(tam)
+	{
+		case TAMANIO_FACIL:
+			return DIF_FACIL;
+		case TAMANIO_MEDIO:
+			return DIF_MEDIO;
+		case TAMANIO_DIFICIL:
+			return DIF_DIFICIL;
+		default:
+			return 0;
+	}
+}
+
+static unsigned short int dameUndos(unsigned short int dif)
+{
+	switch(dif)
+	{
+		case DIF_FACIL:
+			return UNDOS_FACIL;
+		case DIF_MEDIO:
+			return UNDOS_MEDIO;
+		case DIF_DIFICIL:
+			return UNDOS_DIFICIL;
+		default:
+			return 0;
+	}
+}
 
 static Cod_Error inicializarNuevo(Info * laInfo)
 {
@@ -251,26 +326,6 @@ static void liberarTablero(Info * laInfo)
 		free(laInfo->tablero[i]);
 	free(laInfo->tablero);
 	laInfo->tablero = NULL;
-}
-
-Cod_Error actualizarInfo(Info * laInfoActual, Info * laInfoRespaldo, char jugada)
-{
-	if (jugada == UNDO)
-	{
-		copiarInfo(laInfoActual, laInfoRespaldo);
-		laInfoActual->undos -= 1;
-		laInfoActual->undoPosible = FALSE;
-		return OK;
-	}
-	else
-	{
-		Cod_Error hubo_error;
-		copiarInfo(laInfoRespaldo, laInfoActual);
-		mover(laInfoActual, jugada);
-		hubo_error = ponerFicha(laInfoActual, jugada);
-		laInfoActual->undoPosible = TRUE;
-		return hubo_error;
-	}
 }
 
 static void copiarInfo(Info * infoDestino, const Info * infoFuente)
@@ -442,38 +497,6 @@ static Cod_Error ponerFicha(Info * laInfo, char ultimaDireccion)
 	return OK;
 }
 
-unsigned short int validarJugadas(Info * laInfo)
-{	
-	BOOL arriba_valida = FALSE, abajo_valida = FALSE, izquierda_valida = FALSE, derecha_valida = FALSE;
-	unsigned short int i, j, cantJugadas = 0;
-	for (i = 0; i < laInfo->tamanio && cantJugadas < 4; i++)
-		for (j = 0; j < laInfo->tamanio && cantJugadas < 4; j++)
-		{
-			if (arriba_valida == FALSE)
-				arriba_valida = validarArriba(laInfo, i, j);
-			if (abajo_valida == FALSE)
-				abajo_valida = validarAbajo(laInfo, i, j);
-			if (izquierda_valida == FALSE)
-				izquierda_valida = validarIzquierda(laInfo, i, j);
-			if (derecha_valida == FALSE)
-				derecha_valida = validarDerecha(laInfo, i, j);
-		}
-
-	if (arriba_valida == TRUE)
-		laInfo->jugadasValidas[cantJugadas++] = ARRIBA;
-	if (abajo_valida == TRUE)
-		laInfo->jugadasValidas[cantJugadas++] = ABAJO;
-	if (izquierda_valida == TRUE)
-		laInfo->jugadasValidas[cantJugadas++] = IZQUIERDA;
-	if (derecha_valida == TRUE)
-		laInfo->jugadasValidas[cantJugadas++] = DERECHA;
-
-	if (laInfo->undoPosible == TRUE && laInfo->undos > 0)
-		laInfo->jugadasValidas[cantJugadas++] = UNDO;
-
-	return cantJugadas;
-}
-
 static BOOL validarArriba(const Info * laInfo, unsigned short int i, unsigned short int j)
 {
 	if (laInfo->tablero[i][j] == 0)
@@ -618,22 +641,4 @@ static int recorrerTableroArribaoAbajo(const Info * laInfo, char direccion, posi
 	}
 	
 	return cant;
-}
-
-
-void guardaPartida(Info * laInfo)
-{
-	int i,j;
-	unsigned short int dif = dameDificultad(laInfo->tamanio);
-	FILE * archivoGuarda;
-
-	archivoGuarda = fopen(laInfo->nombreArchivo, "wb");
-	
-	fwrite(&dif, sizeof(unsigned short int), 1, archivoGuarda);
-	fwrite(&(laInfo->puntaje), sizeof(Puntaje), 1, archivoGuarda);	
-	fwrite(&(laInfo->undos), sizeof(unsigned short int), 1, archivoGuarda);
-	for(i = 0; i < laInfo->tamanio ; i++)
-		fwrite(laInfo->tablero[i], sizeof(laInfo->tablero[0][0]), laInfo->tamanio, archivoGuarda);
-
-	fclose(archivoGuarda);
 }
