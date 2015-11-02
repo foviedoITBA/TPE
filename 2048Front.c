@@ -61,6 +61,7 @@ int main(void)
 		hubo_error = jugar(&infoActual, &infoRespaldo);
 		
 		printf("¿Desea volver al menú principal? (s: sí)\n");
+		BORRA_BUFFER();
 		opcion = getchar();
 		BORRA_BUFFER();
 		if (opcion != 's')
