@@ -46,7 +46,7 @@ int main(void)
 					break;
 		}
 		
-		if (hubo_error == ERROR_MEMORIA)
+		if (hubo_error == ERROR_MEMORIA)			/* Se salvan los errores de memoria o archivo invalido */
 		{
 			printf("ERROR: FALTA MEMORIA\n");
 			return hubo_error;
@@ -70,7 +70,7 @@ int main(void)
 	return hubo_error;
 }
 
-void limpiarPantalla()
+void limpiarPantalla()		/* "limpia pantalla", portable para cualquier sistema operativo */
 {
 	#ifdef _WIN32
 		system("cls");
@@ -120,7 +120,7 @@ int leerOpcion(int cantidad)
 	return opcion;
 }
 
-void menuDificultad(Info * laInfo)
+void menuDificultad(Info * laInfo)		/* Muestra las opciones de dificultad y guarda la elegida en la estructura */
 {
 	int opcion;
 
@@ -146,7 +146,7 @@ char * leerNombreArchivo()
 {
 	char format[6];
 	
-	char * nombreArchivo = malloc(MAX_FILE_NAME_SIZE * sizeof(nombreArchivo[0]));
+	char * nombreArchivo = malloc(MAX_FILE_NAME_SIZE * sizeof(nombreArchivo[0]));			/* Se crea un string para almacenar el nombre de archivo */
 
 	if(nombreArchivo == NULL)
 		return NULL;
@@ -199,7 +199,7 @@ Cod_Error jugar(Info * laInfoActual, Info * laInfoRespaldo)
 					printf("Error al poner ficha\n");
 		}
 
-	} while(jugada != QUIT && laInfoActual->ganaste != TRUE);
+	} while(jugada != QUIT && laInfoActual->ganaste != TRUE);	/* Ciclo que lee la jugada que desea realizar el usuario (siempre que no haya ganado ni salido) */
 
 	if (laInfoActual->ganaste == TRUE)
 	{
@@ -232,7 +232,7 @@ char leerJugada(Info * laInfo, unsigned short int cantJugadas)
 				if (laInfo->nombreArchivo != NULL)
 				{
 					strncpy(laInfo->nombreArchivo, bufferLectura + 5, strlen(bufferLectura + 5) - 1); /* Que no ponga el '\n' */
-					bufferLectura[0] = GUARDAR; /* Para que el menú distinga entre guardar y abajo */
+					bufferLectura[0] = GUARDAR;	/* Para que el menú distinga entre guardar y abajo */
 					valida = TRUE;
 				}
 			}
@@ -259,12 +259,12 @@ void imprimirTablero(const Info * laInfo)
 	int i, j, h, recuadro;
 	unsigned short int tamanio;
 	tamanio = laInfo->tamanio;
-	recuadro = (4 * tamanio) + tamanio + 1; 						/*(pongo el tamanio+1 porque son los * que separan a los numeros en cada fila) */
+	recuadro = (4 * tamanio) + tamanio + 1; 						/* Es el tamanio+1 porque son los | que separan a los numeros en cada fila */
 
-	for (h = 0; h < recuadro; h++) 									/*se que queda muy villero poner las lineas horizontales que separan las filas asi pero googlie y no hay otra forma	*/
-		printf("-");												/*para hacerlo, solo se puede hacer con loops porque no hay otra forma de hacer un "imprimime x numero de veces un	*/
-	printf("\n");													/*caracter"																											*/
-	for(i=0; i < tamanio; i++)										/*El for que hace printf * podria ser una macro, right?*/
+	for (h = 0; h < recuadro; h++) 									
+		printf("-");												/* Hace la linea horizontal superior del recuadro */
+	printf("\n");
+	for(i=0; i < tamanio; i++)										
 		{
 			for (j = 0; j < tamanio; j++)
 				if (laInfo->tablero[i][j] ==0 )
@@ -272,13 +272,13 @@ void imprimirTablero(const Info * laInfo)
 				else
 					printf("|%4d", laInfo->tablero[i][j]);
 			printf("|\n");
-			for (h = 0; h < recuadro; h++)
+			for (h = 0; h < recuadro; h++)							/* Hace la linea horizontal inferior del recuadro */
 				printf("-");
 			printf("\n");
 		}
 }
 
-void imprimirOpciones()
+void imprimirOpciones()												/* Imprime las opciones del juego */
 {
 	printf("Arriba:\t\t%c\n", ARRIBA);
 	printf("Abajo:\t\t%c\n", ABAJO);
@@ -289,7 +289,7 @@ void imprimirOpciones()
 	printf("Quit:\t\tquit\n\n");
 }
 
-void imprimirPuntajeyUndos(Info * laInfoActual)
+void imprimirPuntajeyUndos(Info * laInfoActual)						/* Imprime el puntaje y cantidad de undos actuales y si es posible realizar un undo */
 {
 	printf("Puntaje:\t%d\n",laInfoActual->puntaje);
 	printf("Undo posible:\t%s\n", laInfoActual->undoPosible ? "Si" : "No");
